@@ -1,18 +1,28 @@
 'use client';
 
 import { Editor } from '@monaco-editor/react';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import type * as monacoType from 'monaco-editor';
 
 export default function MonacoEditor(): React.JSX.Element {
-  const [value, setValue] = useState('// Welcome to the Interactive Code Editor\n// Start typing your code here...\n\nfunction hello() {\n  console.log("Hello World!");\n}\n\n// Click "Start Recording" to begin capturing your coding session\n// All your keystrokes, cursor movements, and selections will be recorded');
+  const [value, setValue] = useState(
+    '// Welcome to the Interactive Code Editor\n// Start typing your code here...\n\nfunction hello() {\n  console.log("Hello World!");\n}\n\n// Click "Start Recording" to begin capturing your coding session\n// All your keystrokes, cursor movements, and selections will be recorded'
+  );
 
   const handleEditorChange = (newValue: string | undefined) => {
     setValue(newValue || '');
   };
 
+  function handleEditorDidMount(
+    editor: monacoType.editor.IStandaloneCodeEditor,
+    monaco: typeof monacoType
+  ) {
+    console.log('onMount: the editor instance:', editor);
+    console.log('onMount: the monaco instance:', monaco);
+  }
+
   return (
     <div className="w-full h-full flex flex-col gap-4">
-      
       {/* Editor */}
       <div className="flex-1 border border-gray-300 rounded-lg overflow-hidden">
         <Editor
@@ -24,7 +34,7 @@ export default function MonacoEditor(): React.JSX.Element {
           theme="vs-dark"
           options={{
             minimap: { enabled: false },
-            fontSize: 14,
+            fontSize: 20,
             wordWrap: 'on',
             automaticLayout: true,
             scrollBeyondLastLine: false,
@@ -41,6 +51,7 @@ export default function MonacoEditor(): React.JSX.Element {
             lineNumbersMinChars: 3,
             renderValidationDecorations: 'on',
           }}
+          onMount={handleEditorDidMount}
         />
       </div>
     </div>
