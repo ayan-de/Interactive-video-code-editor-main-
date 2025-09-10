@@ -31,7 +31,7 @@ export enum RecordingEventType {
   RECORDING_START = 'recording_start',
   RECORDING_PAUSE = 'recording_pause',
   RECORDING_RESUME = 'recording_resume',
-  RECORDING_STOP = 'recording_stop'
+  RECORDING_STOP = 'recording_stop',
 }
 
 // Base interface for all recording events
@@ -94,12 +94,15 @@ export interface LanguageChangeEvent extends BaseRecordingEvent {
 }
 
 export interface RecordingControlEvent extends BaseRecordingEvent {
-  type: RecordingEventType.RECORDING_START | RecordingEventType.RECORDING_PAUSE | 
-        RecordingEventType.RECORDING_RESUME | RecordingEventType.RECORDING_STOP;
+  type:
+    | RecordingEventType.RECORDING_START
+    | RecordingEventType.RECORDING_PAUSE
+    | RecordingEventType.RECORDING_RESUME
+    | RecordingEventType.RECORDING_STOP;
 }
 
 // Union type for all possible recording events
-export type RecordingEvent = 
+export type RecordingEvent =
   | KeystrokeEvent
   | CursorPositionEvent
   | SelectionChangeEvent
@@ -134,11 +137,12 @@ export enum RecordingState {
   IDLE = 'idle',
   RECORDING = 'recording',
   PAUSED = 'paused',
-  STOPPED = 'stopped'
+  STOPPED = 'stopped',
 }
 
 export interface RecordingSessionState {
   sessionId: string | null;
+  sessionTitle?: string;
   state: RecordingState;
   startTime: number | null;
   pausedTime: number;
@@ -168,5 +172,5 @@ export const DEFAULT_RECORDING_CONFIG: RecordingConfig = {
   captureEditorEvents: true,
   debounceDelay: 50,
   compressionEnabled: true,
-  maxEventBufferSize: 10000
+  maxEventBufferSize: 10000,
 };
