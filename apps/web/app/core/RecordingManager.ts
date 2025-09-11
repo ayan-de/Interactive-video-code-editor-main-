@@ -105,6 +105,67 @@ export class RecordingManger {
     });
   }
 
+  stopRecording(
+    sessionTitle: string = 'Untile session',
+    finalContent: string = '',
+    initialContent: string = ''
+  ): RecordingSession | null {
+    if (this.sessionState.state === RecordingState.IDLE) {
+      throw new Error('No recording to stop');
+    }
+
+    const now = Date.now();
+    let finalDuration = this.sessionState.currentDuration;
+
+    if (
+      this.sessionState.state === RecordingState.RECORDING &&
+      this.sessionState.startTime
+    ) {
+      finalDuration +=
+        now - this.sessionState.startTime - this.sessionState.pausedTime;
+    }
+
+    this.addEvent({
+      id: uuidv4(),
+      type: RecordingEventType.RECORDING_STOP,
+      timestamp: now,
+      sessionId: this.sessionState.sessionId!,
+    });
+
+    // Flushing any remaining events
+    this.flushEventBuffer();
+
+    const session: RecordingSession = {
+      id: this.sessionState.sessionId!,
+      title: sessionTitle,
+      description: '',
+      language: 'javascript', // This should be detected
+      initialContent,
+      finalContent,
+      duration: finalDuration,
+      events: [...this.events],
+      createdAt: new Date(this.sessionState.startTime!),
+      updatedAt: new Date(now),
+      metadata: {},
+    };
+
+    // Reset state
+    this.sessionState = {
+      sessionId: null,
+      state: RecordingState.IDLE,
+      startTime: null,
+      pausedTime: 0,
+      currentDuration: 0,
+      eventCount: 0,
+      lastEventTimestamp: null,
+    };
+
+    this.events = [];
+    this.eventBuffer = [];
+
+    return session;
+  }
+
   private addEvent(event: RecordingEvent): void {
     this.sessionState.eventCount++;
     this.sessionState.lastEventTimestamp = event.timestamp;
