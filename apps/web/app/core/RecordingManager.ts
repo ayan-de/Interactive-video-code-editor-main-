@@ -89,6 +89,22 @@ export class RecordingManger {
     });
   }
 
+  resumeRecording(): void {
+    if (this.sessionState.state !== RecordingState.PAUSED) {
+      throw new Error('No pause recording to resume');
+    }
+    const now = Date.now();
+    this.sessionState.state = RecordingState.RECORDING;
+    this.sessionState.pausedTime = now - (this.sessionState.startTime || now);
+
+    this.addEvent({
+      id: uuidv4(),
+      type: RecordingEventType.RECORDING_RESUME,
+      timestamp: now,
+      sessionId: this.sessionState.sessionId!,
+    });
+  }
+
   private addEvent(event: RecordingEvent): void {
     this.sessionState.eventCount++;
     this.sessionState.lastEventTimestamp = event.timestamp;
