@@ -36,7 +36,7 @@ export class RecordingManger {
     };
   }
 
-  startRecording(sessionTitle: string = 'Untile session') {
+  startRecording(sessionTitle: string = 'Untile session'): string {
     if (this.sessionState.state === RecordingState.RECORDING) {
       throw new Error('Recording already in Progress');
     }
@@ -55,6 +55,7 @@ export class RecordingManger {
     };
 
     this.events = [];
+    //When eventBuffer reaches a certain size (e.g. 100), it is flushed into events.
     this.eventBuffer = [];
 
     this.addEvent({
@@ -62,6 +63,29 @@ export class RecordingManger {
       type: RecordingEventType.RECORDING_START,
       timestamp: now,
       sessionId,
+    });
+
+    return sessionId;
+  }
+
+  pauseRecording(): void {
+    if (this.sessionState.state !== RecordingState.RECORDING) {
+      throw new Error('No active recording to pause');
+    }
+
+    const now = Date.now();
+    this.sessionState.state = RecordingState.PAUSED;
+
+    if (this.sessionState.startTime) {
+      this.sessionState.currentDuration +=
+        now - this.sessionState.startTime - this.sessionState.pausedTime;
+    }
+
+    this.addEvent({
+      id: uuidv4(),
+      type: RecordingEventType.RECORDING_PAUSE,
+      timestamp: now,
+      sessionId: this.sessionState.sessionId!,
     });
   }
 
