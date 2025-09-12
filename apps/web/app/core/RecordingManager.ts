@@ -192,6 +192,29 @@ export class RecordingManger {
     this.addEvent(event);
   }
 
+  // Record cursor position change
+  recordCursorPosition(position: Position, previousPosition?: Position): void {
+    if (!this.isRecording() || !this.config.captureCursorMovement) return;
+
+    // Debounce rapid cursor movements
+    const now = Date.now();
+    if (now - this.lastEventTime < this.config.debounceDelay) {
+      return;
+    }
+
+    const event: CursorPositionEvent = {
+      id: uuidv4(),
+      type: RecordingEventType.CURSOR_POSITION,
+      timestamp: now,
+      sessionId: this.sessionState.sessionId!,
+      position,
+      previousPosition,
+    };
+
+    this.addEvent(event);
+    this.lastEventTime = now;
+  }
+
   private addEvent(event: RecordingEvent): void {
     this.sessionState.eventCount++;
     this.sessionState.lastEventTimestamp = event.timestamp;
