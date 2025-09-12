@@ -215,6 +215,25 @@ export class RecordingManger {
     this.lastEventTime = now;
   }
 
+  // Record selection change
+  recordSelectionChange(
+    selection: Selection,
+    previousSelection?: Selection
+  ): void {
+    if (!this.isRecording() || !this.config.captureSelections) return;
+
+    const event: SelectionChangeEvent = {
+      id: uuidv4(),
+      type: RecordingEventType.SELECTION_CHANGE,
+      timestamp: Date.now(),
+      sessionId: this.sessionState.sessionId!,
+      selection,
+      previousSelection,
+    };
+
+    this.addEvent(event);
+  }
+
   private addEvent(event: RecordingEvent): void {
     this.sessionState.eventCount++;
     this.sessionState.lastEventTimestamp = event.timestamp;
