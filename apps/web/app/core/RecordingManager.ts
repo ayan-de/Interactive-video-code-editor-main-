@@ -264,4 +264,44 @@ export class RecordingManger {
   isRecording(): boolean {
     return this.sessionState.state === RecordingState.RECORDING;
   }
+
+  // Check if recording is paused
+  isPaused(): boolean {
+    return this.sessionState.state === RecordingState.PAUSED;
+  }
+
+  // Get current recording state
+  getRecordingState(): RecordingSessionState {
+    return { ...this.sessionState };
+  }
+
+  // Get current event count
+  getEventCount(): number {
+    return this.sessionState.eventCount;
+  }
+
+  // Get current recording duration
+  getCurrentDuration(): number {
+    if (
+      this.sessionState.state === RecordingState.RECORDING &&
+      this.sessionState.startTime
+    ) {
+      const now = Date.now();
+      return (
+        this.sessionState.currentDuration +
+        (now - this.sessionState.startTime - this.sessionState.pausedTime)
+      );
+    }
+    return this.sessionState.currentDuration;
+  }
+
+  // Update recording configuration
+  updateConfig(newConfig: Partial<RecordingConfig>): void {
+    this.config = { ...this.config, ...newConfig };
+  }
+
+  // Get current configuration
+  getConfig(): RecordingConfig {
+    return { ...this.config };
+  }
 }
