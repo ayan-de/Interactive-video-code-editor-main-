@@ -107,6 +107,7 @@ export class RecordingManger {
 
   stopRecording(
     sessionTitle: string = 'Untile session',
+    description: string = 'Provide a description',
     finalContent: string = '',
     initialContent: string = ''
   ): RecordingSession | null {
@@ -138,7 +139,7 @@ export class RecordingManger {
     const session: RecordingSession = {
       id: this.sessionState.sessionId!,
       title: sessionTitle,
-      description: '',
+      description: description,
       language: 'javascript', // This should be detected
       initialContent,
       finalContent,
@@ -166,6 +167,31 @@ export class RecordingManger {
     return session;
   }
 
+  recordKeystoke(
+    key: string,
+    position: Position,
+    modifiers: {
+      altKey: boolean;
+      ctrlKey: boolean;
+      metaKey: boolean;
+      shiftKey: boolean;
+    }
+  ): void {
+    if (!this.isRecording() || !this.config.captureKeystrokes) return;
+
+    const event: KeystrokeEvent = {
+      id: uuidv4(),
+      type: RecordingEventType.KEYSTROKE,
+      timestamp: Date.now(),
+      sessionId: this.sessionState.sessionId!,
+      key,
+      position,
+      ...modifiers,
+    };
+
+    this.addEvent(event);
+  }
+
   private addEvent(event: RecordingEvent): void {
     this.sessionState.eventCount++;
     this.sessionState.lastEventTimestamp = event.timestamp;
@@ -190,5 +216,10 @@ export class RecordingManger {
   private flushEventBuffer(): void {
     this.events.push(...this.eventBuffer);
     this.eventBuffer = [];
+  }
+
+  // Check if currently recording
+  isRecording(): boolean {
+    return this.sessionState.state === RecordingState.RECORDING;
   }
 }
