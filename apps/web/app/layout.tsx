@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import { Poppins } from 'next/font/google';
 import './globals.css';
 import { UserProvider } from './context/UserContext';
+import { LoadingProvider } from './context/LoadingContext';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -34,7 +35,9 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${geistSans.variable} ${geistMono.variable}`}
       >
-        <UserProvider>{children}</UserProvider>
+        <LoadingProvider>
+          <UserProvider>{children}</UserProvider>
+        </LoadingProvider>
       </body>
     </html>
   );

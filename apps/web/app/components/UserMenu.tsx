@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { User } from '../types/auth';
 import UserAvatar from './UserAvatar';
 import { useAuth } from '../hooks/useAuth';
+import { useLoading } from '../context/LoadingContext';
 
 interface UserMenuProps {
   user: User;
@@ -13,6 +14,7 @@ export default function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { logout } = useAuth();
+  const { showLoading, showSuccess, showError } = useLoading();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -29,10 +31,13 @@ export default function UserMenu({ user }: UserMenuProps) {
 
   const handleLogout = async () => {
     try {
-      await logout();
       setIsOpen(false);
+      showLoading('Signing you out...');
+      await logout();
+      showSuccess('You have been signed out successfully!');
     } catch (error) {
       console.error('Logout failed:', error);
+      showError('Failed to sign out. Please try again.');
     }
   };
 
