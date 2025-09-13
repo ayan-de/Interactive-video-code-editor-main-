@@ -29,11 +29,11 @@ export default function UserAvatar({
         <img
           src={user.picture}
           alt={`${user.firstName} ${user.lastName}`}
-          className="w-full h-full rounded-full object-cover border-2 border-white/20"
+          className="w-full h-full rounded-full object-cover border-2 border-white/20 cursor-pointer"
           referrerPolicy="no-referrer"
         />
       ) : (
-        <div className="w-full h-full rounded-full bg-white/20 border-2 border-white/20 flex items-center justify-center text-white font-semibold">
+        <div className="w-full h-full rounded-full bg-white/20 border-2 border-white/20 flex items-center justify-center text-white font-semibold cursor-pointer">
           {getInitials(user.firstName, user.lastName)}
         </div>
       )}
