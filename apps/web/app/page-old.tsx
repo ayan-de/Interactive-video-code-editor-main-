@@ -40,14 +40,14 @@ export default function Home() {
     <div className="min-h-screen relative overflow-hidden bg-black">
       {/* Aurora Background */}
       <div className="absolute inset-0 z-0">
-        <Aurora
+        <Aurora 
           colorStops={['#5227FF', '#7cff67', '#FF2751']}
           amplitude={1.2}
           blend={0.6}
           speed={0.8}
         />
       </div>
-
+      
       {/* Content overlay */}
       <div className="relative z-10 min-h-screen bg-black/20 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-12">
@@ -72,23 +72,23 @@ export default function Home() {
 
             {/* Main Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <Link
-                href="/record"
-                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
-              >
-                <span className="text-2xl">📹</span>
-                Start Recording
-              </Link>
+            <Link
+              href="/record"
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
+            >
+              <span className="text-2xl">📹</span>
+              Start Recording
+            </Link>
 
-              <Link
-                href="/view"
-                className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
-              >
-                <span className="text-2xl">▶️</span>
-                View Recordings {recordingCount > 0 && `(${recordingCount})`}
-              </Link>
-            </div>
-          </header>
+            <Link
+              href="/view"
+              className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-3"
+            >
+              <span className="text-2xl">▶️</span>
+              View Recordings {recordingCount > 0 && `(${recordingCount})`}
+            </Link>
+          </div>
+        </header>
 
           {/* Features Grid */}
           <section className="mb-16">
@@ -164,6 +164,50 @@ export default function Home() {
                   analysis, and coding patterns for learning insights.
                 </p>
               </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="text-4xl mb-4">🎬</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Interactive Playback
+              </h3>
+              <p className="text-gray-600">
+                Watch recordings with full playback controls: play/pause/stop,
+                speed adjustment (0.25x-4x), and timeline scrubbing.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="text-4xl mb-4">💾</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Auto-Save
+              </h3>
+              <p className="text-gray-600">
+                All recordings are automatically saved to browser storage with
+                metadata including duration, event count, and creation date.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="text-4xl mb-4">�</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Monaco Integration
+              </h3>
+              <p className="text-gray-600">
+                Built on Monaco Editor with full syntax highlighting,
+                IntelliSense, and multi-language support preserved during
+                playback.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className="text-4xl mb-4">📊</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Detailed Analytics
+              </h3>
+              <p className="text-gray-600">
+                View comprehensive session data including event counts, timing
+                analysis, and coding patterns for learning insights.
+              </p>
             </div>
           </section>
 
@@ -191,9 +235,7 @@ export default function Home() {
                 <div className="bg-gradient-to-r from-indigo-100 to-indigo-200 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-indigo-600">2</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Save
-                </h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Save</h3>
                 <p className="text-gray-600">
                   Stop recording when finished. Your session is automatically
                   saved with all events and metadata preserved.
