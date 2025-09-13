@@ -16,7 +16,7 @@ import {
   Range,
 } from '@/types/recordings';
 
-export class RecordingManger {
+export class RecordingManager {
   private events: RecordingEvent[] = [];
   private sessionState: RecordingSessionState;
   private config: RecordingConfig;
