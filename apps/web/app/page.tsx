@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import Aurora from './components/Aurora';
+import { Button } from './components/ui/button';
 
 export default function Home() {
   const [recordingCount, setRecordingCount] = useState(0);
@@ -59,6 +60,28 @@ export default function Home() {
               <p className="text-2xl font-medium text-gray-300 mb-2 drop-shadow-md">
                 "Stop recording pixels, instead capture DOM"
               </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-6 justify-center mt-8">
+              <Link href="/record">
+                <Button
+                  size="lg"
+                  className="bg-white text-black hover:bg-gray-100 font-semibold px-12 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-14 cursor-pointer"
+                >
+                  Start Recording
+                </Button>
+              </Link>
+
+              <Link href="/view">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-white/50 bg-transparent backdrop-blur-sm text-white hover:bg-white/10 hover:border-white/70 font-semibold px-12 py-4 text-lg shadow-lg transition-all duration-300 h-14 cursor-pointer"
+                >
+                  View Recordings {recordingCount > 0 && `(${recordingCount})`}
+                </Button>
+              </Link>
             </div>
           </div>
         </header>
