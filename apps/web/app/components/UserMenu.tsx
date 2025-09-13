@@ -5,6 +5,7 @@ import { User } from '../types/auth';
 import UserAvatar from './UserAvatar';
 import { useAuth } from '../hooks/useAuth';
 import { useLoading } from '../context/LoadingContext';
+import { useRouter } from 'next/navigation';
 
 interface UserMenuProps {
   user: User;
@@ -15,6 +16,7 @@ export default function UserMenu({ user }: UserMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const { logout } = useAuth();
   const { showLoading, showSuccess, showError } = useLoading();
+  const router = useRouter();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,16 +45,23 @@ export default function UserMenu({ user }: UserMenuProps) {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 hover:bg-white/10 rounded-full p-1 transition-all duration-300"
-      >
-        <UserAvatar user={user} size="sm" />
-        <span className="hidden md:block text-white text-sm font-medium">
-          {user.firstName}
-        </span>
-      </button>
-
+      <div className="flex flex-row gap-3">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center space-x-2 hover:bg-white/10 rounded-full p-1 transition-all duration-300"
+        >
+          <UserAvatar user={user} size="sm" />
+          <span className="hidden md:block text-white text-sm font-medium">
+            {user.firstName}
+          </span>
+        </button>
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center bg-white text-black space-x-1 text-sm font-semibold hover:bg-white/60 rounded-full px-2 py-1 transition-all duration-300 cursor-pointer"
+        >
+          Dashboard
+        </button>
+      </div>
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md border border-white/20 rounded-lg shadow-lg z-50">
           <div className="px-4 py-3 border-b border-gray-200">
