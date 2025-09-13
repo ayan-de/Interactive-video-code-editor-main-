@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import Aurora from './components/Aurora';
 import { Button } from './components/ui/button';
+import Navbar from './components/Navbar';
 
 export default function Home() {
   const [recordingCount, setRecordingCount] = useState(0);
@@ -50,43 +51,52 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 min-h-screen bg-black/20 backdrop-blur-sm flex flex-col">
+        {/* Top Navigation Bar */}
+        <Navbar />
+
         {/* Hero Section */}
-        <header className="flex-grow flex items-center justify-center text-center">
-          <div className="mb-8">
-            <h1 className="text-5xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
+        <header className="flex-grow flex items-center justify-center text-center px-4 md:px-6">
+          <div className="mb-8 max-w-4xl">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
               Interactive Video Code Editor
             </h1>
             <div className="mb-6">
-              <p className="text-2xl font-medium text-gray-300 mb-2 drop-shadow-md">
+              <p className="text-lg sm:text-xl md:text-2xl font-medium text-gray-300 mb-2 drop-shadow-md px-2">
                 "Stop recording pixels, instead capture DOM"
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-6 justify-center mt-8">
-              <Link href="/record">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-6 md:mt-8 px-4">
+              <Link href="/record" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="bg-white text-black hover:bg-gray-100 font-semibold px-12 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-14 cursor-pointer"
+                  className="w-full sm:w-auto bg-white text-black hover:bg-gray-100 font-semibold px-6 sm:px-8 md:px-12 py-3 md:py-4 text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-12 md:h-14 cursor-pointer"
                 >
                   Start Recording
                 </Button>
               </Link>
 
-              <Link href="/view">
+              <Link href="/view" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="border-2 border-white/50 bg-transparent backdrop-blur-sm text-white hover:bg-white/10 hover:border-white/70 font-semibold px-12 py-4 text-lg shadow-lg transition-all duration-300 h-14 cursor-pointer"
+                  className="w-full sm:w-auto border-2 border-white/50 bg-transparent backdrop-blur-sm text-white hover:bg-white/10 hover:border-white/70 font-semibold px-6 sm:px-8 md:px-12 py-3 md:py-4 text-base md:text-lg shadow-lg transition-all duration-300 h-12 md:h-14 cursor-pointer"
                 >
-                  View Recordings {recordingCount > 0 && `(${recordingCount})`}
+                  <span className="hidden sm:inline">View Recordings</span>
+                  <span className="sm:hidden">
+                    View ({recordingCount > 0 ? recordingCount : 0})
+                  </span>
+                  <span className="hidden sm:inline">
+                    {recordingCount > 0 && ` (${recordingCount})`}
+                  </span>
                 </Button>
               </Link>
             </div>
           </div>
         </header>
-        <footer className="text-center py-6 text-gray-300">
-          <p>
+        <footer className="text-center py-4 md:py-6 text-gray-300 px-4">
+          <p className="text-sm md:text-base">
             Built with Next.js, Monaco Editor, and TypeScript by{' '}
             <a
               href="https://github.com/ayan-de"
