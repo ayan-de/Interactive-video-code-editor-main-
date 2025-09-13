@@ -167,7 +167,7 @@ export class RecordingManager {
     return session;
   }
 
-  recordKeystoke(
+  recordKeystroke(
     key: string,
     position: Position,
     modifiers: {
@@ -229,6 +229,33 @@ export class RecordingManager {
       sessionId: this.sessionState.sessionId!,
       selection,
       previousSelection,
+    };
+
+    this.addEvent(event);
+  }
+
+  // Record content change
+  recordContentChange(
+    changes: Array<{ range: Range; rangeLength: number; text: string }>,
+    versionId: number,
+    eol: string,
+    isFlush: boolean = false,
+    isRedoing: boolean = false,
+    isUndoing: boolean = false
+  ): void {
+    if (!this.isRecording() || !this.config.captureContentChanges) return;
+
+    const event: ContentChangeEvent = {
+      id: uuidv4(),
+      type: RecordingEventType.CONTENT_CHANGE,
+      timestamp: Date.now(),
+      sessionId: this.sessionState.sessionId!,
+      changes,
+      versionId,
+      eol,
+      isFlush,
+      isRedoing,
+      isUndoing,
     };
 
     this.addEvent(event);
