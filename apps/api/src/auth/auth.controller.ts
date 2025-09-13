@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Req, Res, UseGuards, Post } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -8,26 +8,60 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req: Request) {
-    // Initiates Google OAuth flow
+  async getGoogleAuthUrl() {
+    const authUrl =
+      `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${process.env.GOOGLE_CLIENT_ID}` +
+      `&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}` +
+      `&response_type=code` +
+      `&scope=profile email` +
+      `&access_type=offline`;
+
+    return {
+      status: 200,
+      code: 'SUCCESS',
+      message: 'Google auth URL generated',
+      data: {
+        authUrl,
+      },
+    };
   }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    // Handle the Google OAuth callback
-    const user = req.user;
+  async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
+    const code = req.query.code as string;
+    const error = req.query.error as string;
 
-    if (user) {
+    if (error) {
+      // Redirect to frontend with error
+      return res.redirect(
+        `http://localhost:3000/auth/callback?error=${encodeURIComponent(error)}`
+      );
+    }
+
+    if (!code) {
+      // Redirect to frontend with error
+      return res.redirect(
+        'http://localhost:3000/auth/callback?error=missing_code'
+      );
+    }
+
+    try {
+      const user = await this.authService.handleGoogleCallback(code);
+
       // Store user in session
       (req.session as any).user = user;
 
-      // Redirect to frontend with success
-      res.redirect('http://localhost:3000?auth=success');
-    } else {
+      // Redirect to frontend with success and user data
+      const userData = encodeURIComponent(JSON.stringify(user));
+      return res.redirect(
+        `http://localhost:3000/auth/callback?success=true&user=${userData}`
+      );
+    } catch (error) {
       // Redirect to frontend with error
-      res.redirect('http://localhost:3000?auth=error');
+      return res.redirect(
+        `http://localhost:3000/auth/callback?error=${encodeURIComponent(error.message)}`
+      );
     }
   }
 
@@ -36,20 +70,42 @@ export class AuthController {
     const user = (req.session as any).user;
 
     if (!user) {
-      return { message: 'Not authenticated' };
+      return {
+        status: 401,
+        code: 'NOT_AUTHENTICATED',
+        message: 'Not authenticated',
+        error: 'Unauthorized',
+      };
     }
 
-    return { user };
+    return {
+      status: 200,
+      code: 'SUCCESS',
+      message: 'Profile retrieved successfully',
+      data: {
+        user,
+        accessToken: 'session-based',
+      },
+    };
   }
 
-  @Get('logout')
+  @Post('logout')
   async logout(@Req() req: Request, @Res() res: Response) {
     req.session.destroy((err) => {
       if (err) {
-        return res.status(500).json({ message: 'Could not log out' });
+        return res.status(500).json({
+          status: 500,
+          code: 'LOGOUT_FAILED',
+          message: 'Could not log out',
+          error: 'Internal Server Error',
+        });
       }
       res.clearCookie('connect.sid');
-      res.json({ message: 'Logged out successfully' });
+      res.json({
+        status: 200,
+        code: 'SUCCESS',
+        message: 'Logged out successfully',
+      });
     });
   }
 
