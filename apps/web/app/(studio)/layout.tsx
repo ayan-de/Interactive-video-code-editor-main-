@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Aurora from '@/components/Aurora';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 interface StudioLayoutProps {
   children: React.ReactNode;
@@ -101,7 +102,10 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
         </nav>
 
         {/* Page Content */}
-        <main className="p-6 pt-0">{children}</main>
+        <main className="p-6 pt-0 flex-grow">{children}</main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );
