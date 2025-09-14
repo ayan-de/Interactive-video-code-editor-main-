@@ -53,7 +53,7 @@ export default function Home() {
 
       <div className="relative z-10 min-h-screen bg-black/20 backdrop-blur-sm flex flex-col">
         {/* Top Navigation Bar */}
-        <Navbar />
+        <Navbar mainText="Tantrica" />
 
         {/* Hero Section */}
         <header className="flex-grow flex items-center justify-center text-center px-4 md:px-6">

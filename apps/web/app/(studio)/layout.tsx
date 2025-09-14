@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Aurora from '@/components/Aurora';
+import Navbar from '@/components/Navbar';
 
 interface StudioLayoutProps {
   children: React.ReactNode;
@@ -14,6 +16,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
 
   const isRecordPage = pathname?.includes('/record');
   const isViewPage = pathname?.includes('/view');
+  const navbarText = isRecordPage ? 'Tantra' : 'Mantra';
 
   // Count saved recordings
   useEffect(() => {
@@ -45,60 +48,19 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
   }, []);
 
   return (
-    <div
-      className={`min-h-screen ${
-        isRecordPage
-          ? 'bg-gradient-to-br from-blue-50 to-indigo-100'
-          : isViewPage
-            ? 'bg-gradient-to-br from-indigo-50 to-purple-100'
-            : 'bg-gray-50'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto">
-        {/* Common Header */}
-        <header className="p-6 pb-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {isRecordPage
-                  ? '📹 Recording Studio'
-                  : isViewPage
-                    ? '▶️ Recording Viewer'
-                    : '🎬 Studio'}
-              </h1>
-              <p className="text-gray-600">
-                {isRecordPage
-                  ? 'Capture your coding sessions with precision timing and detailed event tracking'
-                  : isViewPage
-                    ? 'Watch and interact with your saved coding sessions'
-                    : 'Your interactive coding workspace'}
-              </p>
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex items-center gap-3">
-              {isRecordPage && (
-                <Link
-                  href="/view"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                >
-                  <span>▶️</span>
-                  View Recordings {recordingCount > 0 && `(${recordingCount})`}
-                </Link>
-              )}
-
-              {isViewPage && (
-                <Link
-                  href="/record"
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                >
-                  <span>📹</span>
-                  New Recording
-                </Link>
-              )}
-            </div>
-          </div>
-        </header>
+    <div className="min-h-screen relative overflow-hidden bg-black">
+      <div className="absolute inset-0 z-0">
+        <Aurora
+          colorStops={['#7cff67', '#B19EEF', '#5227FF']}
+          amplitude={1.2}
+          blend={0.5}
+          speed={0.8}
+        />
+      </div>
+      <div className="relative z-10 min-h-screen bg-black/20 backdrop-blur-sm flex flex-col">
+        <div>
+          <Navbar mainText={navbarText}></Navbar>
+        </div>
 
         {/* Common Navigation */}
         <nav className="px-6 py-4">

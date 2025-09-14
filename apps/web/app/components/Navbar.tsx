@@ -5,7 +5,11 @@ import { useAuth } from '../hooks/useAuth';
 import { useLoading } from '../context/LoadingContext';
 import UserMenu from './UserMenu';
 
-export default function Navbar() {
+export interface NavbarProps {
+  mainText: string;
+}
+
+export default function Navbar({ mainText }: NavbarProps) {
   const { user, isLoading, isAuthenticated } = useAuth();
   const { showLoading, showError } = useLoading();
 
@@ -29,7 +33,9 @@ export default function Navbar() {
     <div className="w-full flex justify-center pt-3 md:pt-6 px-3 md:px-6">
       <nav className="flex justify-between items-center backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-3 md:px-6 py-2 md:py-3 max-w-2xl w-full">
         <div className="flex items-center">
-          <h2 className="text-lg md:text-xl font-bold text-white">Tantrica</h2>
+          <h2 className="text-lg md:text-xl font-bold text-white">
+            {mainText}
+          </h2>
         </div>
         <div className="flex gap-1 md:gap-2 items-center">
           {isLoading ? (
