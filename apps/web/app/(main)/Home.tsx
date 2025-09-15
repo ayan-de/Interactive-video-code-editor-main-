@@ -5,9 +5,15 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import SloganText from '../components/SloganText';
 import { PlaygroundCards } from '../components/playgroundCards';
+import PlaygroundModal from '../components/playgroundCards/PlaygroundModal';
 
 export default function Home() {
   const [recordingCount, setRecordingCount] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  const handleStartRecording = () => {
+    setOpen(true);
+  };
 
   // Count saved recordings
   useEffect(() => {
@@ -55,14 +61,15 @@ export default function Home() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-6 md:mt-8 px-4">
-            <Link href="/record" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto bg-white text-black hover:bg-gray-100 font-semibold px-6 sm:px-8 md:px-12 py-3 md:py-4 text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-12 md:h-14 cursor-pointer"
-              >
-                Start Recording
-              </Button>
-            </Link>
+            {/* <Link href="/record" className="w-full sm:w-auto"> */}
+            <Button
+              size="lg"
+              className="w-full sm:w-auto bg-white text-black hover:bg-gray-100 font-semibold px-6 sm:px-8 md:px-12 py-3 md:py-4 text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-12 md:h-14 cursor-pointer"
+              onClick={handleStartRecording}
+            >
+              Start Recording
+            </Button>
+            {/* </Link> */}
 
             <Link href="/view" className="w-full sm:w-auto">
               <Button
@@ -100,6 +107,9 @@ export default function Home() {
           <PlaygroundCards />
         </div>
       </section>
+
+      {/* Recording Modal */}
+      <PlaygroundModal open={open} onOpenChange={setOpen} />
     </>
   );
 }
