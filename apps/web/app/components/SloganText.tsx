@@ -4,7 +4,7 @@ export default function SloganText() {
   return (
     <div>
       <div className="mb-6">
-        <p className="text-lg sm:text-xl md:text-2xl font-medium text-gray-300 mb-2 drop-shadow-md px-2 inline-flex items-center justify-center">
+        <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-gray-300 mb-2 drop-shadow-md px-2 inline-flex items-center justify-center">
           <span className="sr-only">Slogan:</span>
           <span className="relative inline-flex items-center">
             <span>"</span>
