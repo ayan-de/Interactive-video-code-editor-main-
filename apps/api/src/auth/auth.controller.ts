@@ -6,15 +6,13 @@ import { AuthService } from './auth.service';
 declare module 'express-session' {
   interface SessionData {
     user?: {
-      id: string;
+      _id: string;
       email: string;
       firstName: string;
       lastName: string;
       picture?: string;
       provider: 'google';
       providerId: string;
-      createdAt: string;
-      updatedAt: string;
     };
   }
 }
@@ -68,7 +66,15 @@ export class AuthController {
     try {
       const user = await this.authService.handleGoogleCallback(code);
 
-      req.session.user = user;
+      req.session.user = {
+        _id: user._id.toString(),
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        picture: user.picture,
+        provider: user.provider,
+        providerId: user.providerId,
+      };
 
       return res.redirect(`${frontendUrl}/auth/callback?success=true`);
     } catch (err: any) {

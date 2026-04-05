@@ -360,12 +360,12 @@ The core product page. Features:
 - [x] ~~Fix "Untile" typo → "Untitled"~~ ✅
 - [x] ~~Remove dead code (page-old.tsx, page.module.css, AuthenticatedGuard, GoogleStrategy)~~ ✅
 
-  1.2 **Add MongoDB**
+  1.2 **Add MongoDB** ✅
 
-- Add Mongoose to API app
-- Create User model, Recording model, RecordingEvent model
-- Add .env.example with all required vars
-- Migrate auth to persist users in DB
+- [x] ~~Add Mongoose to API app~~ ✅
+- [x] ~~Create User model, Recording model, RecordingEvent model~~ ✅
+- [x] ~~Add .env.example with all required vars~~ ✅
+- [x] ~~Migrate auth to persist users in DB~~ ✅
 
   1.3 **Recording API**
 

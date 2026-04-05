@@ -1,27 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  picture?: string;
-  provider: 'google';
-  providerId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from '../schemas/user.schema';
 
 @Injectable()
 export class AuthService {
-  constructor(private configService: ConfigService) {}
-  async validateUser(user: any): Promise<User> {
-    // In a real application, you might want to save the user to a database
-    // For now, we'll just return the user data from Google
-    const now = new Date().toISOString();
-    return {
-      id: user.id,
+  constructor(
+    private configService: ConfigService,
+    @InjectModel(User.name) private userModel: Model<UserDocument>
+  ) {}
+
+  async validateUser(user: any): Promise<UserDocument> {
+    const existingUser = await this.userModel
+      .findOne({ providerId: user.id })
+      .exec();
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const now = new Date();
+    return this.userModel.create({
       email: user.emails[0].value,
       firstName: user.name.givenName,
       lastName: user.name.familyName,
@@ -30,12 +30,11 @@ export class AuthService {
       providerId: user.id,
       createdAt: now,
       updatedAt: now,
-    };
+    });
   }
 
-  async handleGoogleCallback(code: string): Promise<User> {
+  async handleGoogleCallback(code: string): Promise<UserDocument> {
     try {
-      // Exchange code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -58,7 +57,6 @@ export class AuthService {
         );
       }
 
-      // Get user info from Google
       const userResponse = await fetch(
         `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokens.access_token}`
       );
@@ -68,27 +66,44 @@ export class AuthService {
         throw new Error('Failed to fetch user information');
       }
 
-      // Transform to our user format
-      const now = new Date().toISOString();
-      return {
-        id: googleUser.id,
+      return this.findOrCreateUser({
+        providerId: googleUser.id,
         email: googleUser.email,
         firstName: googleUser.given_name,
         lastName: googleUser.family_name,
         picture: googleUser.picture,
-        provider: 'google',
-        providerId: googleUser.id,
-        createdAt: now,
-        updatedAt: now,
-      };
+      });
     } catch (error: any) {
       throw new Error(`Google OAuth failed: ${error.message}`);
     }
   }
 
-  async findUserById(id: string): Promise<User | null> {
-    // In a real application, you would fetch the user from a database
-    // For now, we'll return null as this is just a demo
-    return null;
+  private async findOrCreateUser(data: {
+    providerId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    picture?: string;
+  }): Promise<UserDocument> {
+    const existingUser = await this.userModel
+      .findOne({ providerId: data.providerId })
+      .exec();
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    return this.userModel.create({
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      picture: data.picture,
+      provider: 'google',
+      providerId: data.providerId,
+    });
+  }
+
+  async findUserById(id: string): Promise<UserDocument | null> {
+    return this.userModel.findById(id).exec();
   }
 }
