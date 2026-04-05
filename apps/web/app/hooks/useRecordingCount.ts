@@ -1,35 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { countRecordings as countRecordingsDB } from '@/lib/recordingStorage';
 
 export function useRecordingCount(): number {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const countRecordings = () => {
-      let c = 0;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('recording_')) {
-          c++;
-        }
-      }
-      setCount(c);
+    const refreshCount = () => {
+      countRecordingsDB()
+        .then(setCount)
+        .catch(() => setCount(0));
     };
 
-    countRecordings();
+    refreshCount();
 
     const handleStorageChange = () => {
-      countRecordings();
+      refreshCount();
     };
 
     const handleRecordingSaved = () => {
-      countRecordings();
+      refreshCount();
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('recording_saved', handleRecordingSaved);
-    const interval = setInterval(countRecordings, 2000);
+    const interval = setInterval(refreshCount, 2000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);

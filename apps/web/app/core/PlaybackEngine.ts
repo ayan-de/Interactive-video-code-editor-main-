@@ -61,6 +61,12 @@ export class PlaybackEngine {
   private lastUpdateTime: number = 0;
   private startTime: number = 0;
 
+  private snapshots: Map<number, { content: string; language: string }> =
+    new Map();
+  private currentContent: string = '';
+  private currentLanguage: string = '';
+  private snapshotInterval: number = 50;
+
   constructor() {
     this.reset();
   }
@@ -103,6 +109,10 @@ export class PlaybackEngine {
     } else {
       this.position.totalTime = session.duration;
     }
+
+    this.snapshots.clear();
+    this.currentContent = '';
+    this.currentLanguage = '';
 
     this.reset();
     this.emit('stateChange', { state: this.state, session });
@@ -320,15 +330,34 @@ export class PlaybackEngine {
   private applyEventsUpToIndex(index: number): void {
     if (!this.session) return;
 
-    // Reset to initial state first
+    let snapshotIndex = -1;
+    for (let i = index; i >= 0; i -= this.snapshotInterval) {
+      const snap = this.snapshots.get(i);
+      if (snap) {
+        snapshotIndex = i;
+        this.currentContent = snap.content;
+        this.currentLanguage = snap.language;
+        break;
+      }
+    }
+
+    if (snapshotIndex === -1) {
+      this.currentContent = this.session.initialContent;
+      this.currentLanguage = this.session.language;
+    }
+
     this.emit('eventProcessed', {
       type: 'reset',
-      content: this.session.initialContent,
-      language: this.session.language,
+      content: this.currentContent,
+      language: this.currentLanguage,
     });
 
-    // Apply all events up to the index
-    for (let i = 0; i <= index && i < this.session.events.length; i++) {
+    const startIndex = snapshotIndex + 1;
+    for (
+      let i = startIndex;
+      i <= index && i < this.session.events.length;
+      i++
+    ) {
       const event = this.session.events[i];
       if (event) {
         this.processEvent(event);
@@ -339,12 +368,29 @@ export class PlaybackEngine {
   private processEvent(event: RecordingEvent): void {
     try {
       switch (event.type) {
-        case RecordingEventType.CONTENT_CHANGE:
+        case RecordingEventType.CONTENT_CHANGE: {
+          const contentEvent = event as ContentChangeEvent;
+          for (const change of contentEvent.changes) {
+            this.currentContent = this.applyTextChange(
+              this.currentContent,
+              change
+            );
+          }
           this.emit('eventProcessed', {
             type: 'contentChange',
-            event: event as ContentChangeEvent,
+            event: contentEvent,
           });
+          if (
+            this.session &&
+            this.position.currentEventIndex % this.snapshotInterval === 0
+          ) {
+            this.snapshots.set(this.position.currentEventIndex, {
+              content: this.currentContent,
+              language: this.currentLanguage,
+            });
+          }
           break;
+        }
 
         case RecordingEventType.CURSOR_POSITION:
           this.emit('eventProcessed', {
@@ -367,12 +413,15 @@ export class PlaybackEngine {
           });
           break;
 
-        case RecordingEventType.LANGUAGE_CHANGE:
+        case RecordingEventType.LANGUAGE_CHANGE: {
+          const langEvent = event as LanguageChangeEvent;
+          this.currentLanguage = langEvent.language;
           this.emit('eventProcessed', {
             type: 'languageChange',
-            event,
+            event: langEvent,
           });
           break;
+        }
 
         // Control events don't need special handling during playback
         case RecordingEventType.RECORDING_START:
@@ -397,9 +446,34 @@ export class PlaybackEngine {
   }
 
   // Cleanup
+  private applyTextChange(
+    content: string,
+    change: { range: Range; text: string }
+  ): string {
+    const lines = content.split('\n');
+    const { startLineNumber, startColumn, endLineNumber, endColumn } =
+      change.range;
+
+    const beforeLines = lines.slice(0, startLineNumber - 1);
+    const afterLines = lines.slice(endLineNumber);
+
+    const startLine = lines[startLineNumber - 1] || '';
+    const endLine = lines[endLineNumber - 1] || '';
+
+    const beforeText = startLine.substring(0, startColumn - 1);
+    const afterText = endLine.substring(endColumn - 1);
+
+    const newLines = (beforeText + change.text + afterText).split('\n');
+
+    return [...beforeLines, ...newLines, ...afterLines].join('\n');
+  }
+
   public destroy(): void {
     this.stop();
     this.eventHandlers.clear();
     this.session = null;
+    this.snapshots.clear();
+    this.currentContent = '';
+    this.currentLanguage = '';
   }
 }

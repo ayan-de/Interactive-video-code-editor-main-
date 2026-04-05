@@ -8,8 +8,9 @@ import React, {
   useRef,
   ReactNode,
 } from 'react';
-import { User } from '../types/auth';
+import type { User } from '../types/auth';
 import { get } from '@/lib/api';
+import { USER_STORAGE_KEY } from '@/lib/constants';
 
 interface UserContextType {
   user: User | null;
@@ -19,8 +20,6 @@ interface UserContextType {
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
-
-const USER_STORAGE_KEY = 'tantrica_user';
 
 interface UserProviderProps {
   children: ReactNode;

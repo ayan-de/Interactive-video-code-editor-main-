@@ -1,18 +1,39 @@
-import { Controller, Get, Req, Res, UseGuards, Post } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Req, Res, Post } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
+
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      picture?: string;
+      provider: 'google';
+      providerId: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+  }
+}
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService
+  ) {}
 
   @Get('google')
   async getGoogleAuthUrl() {
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const redirectUri = this.configService.get<string>('GOOGLE_CALLBACK_URL');
     const authUrl =
       `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${process.env.GOOGLE_CLIENT_ID}` +
-      `&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}` +
+      `client_id=${clientId}` +
+      `&redirect_uri=${redirectUri}` +
       `&response_type=code` +
       `&scope=profile email` +
       `&access_type=offline`;
@@ -31,40 +52,35 @@ export class AuthController {
   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
     const code = req.query.code as string;
     const error = req.query.error as string;
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
 
     if (error) {
-      // Redirect to frontend with error
       return res.redirect(
-        `http://localhost:3000/auth/callback?error=${encodeURIComponent(error)}`
+        `${frontendUrl}/auth/callback?error=${encodeURIComponent(error)}`
       );
     }
 
     if (!code) {
-      // Redirect to frontend with error
-      return res.redirect(
-        'http://localhost:3000/auth/callback?error=missing_code'
-      );
+      return res.redirect(`${frontendUrl}/auth/callback?error=missing_code`);
     }
 
     try {
       const user = await this.authService.handleGoogleCallback(code);
 
-      // Store user in session
-      (req.session as any).user = user;
+      req.session.user = user;
 
-      // Redirect to frontend — user data is read from session via /auth/profile
-      return res.redirect(`http://localhost:3000/auth/callback?success=true`);
-    } catch (error) {
-      // Redirect to frontend with error
+      return res.redirect(`${frontendUrl}/auth/callback?success=true`);
+    } catch (err: any) {
       return res.redirect(
-        `http://localhost:3000/auth/callback?error=${encodeURIComponent(error.message)}`
+        `${frontendUrl}/auth/callback?error=${encodeURIComponent(err.message)}`
       );
     }
   }
 
   @Get('profile')
   async getProfile(@Req() req: Request) {
-    const user = (req.session as any).user;
+    const user = req.session.user;
 
     if (!user) {
       return {
@@ -108,10 +124,10 @@ export class AuthController {
 
   @Get('status')
   async getAuthStatus(@Req() req: Request) {
-    const user = (req.session as any).user;
+    const user = req.session.user;
     return {
       isAuthenticated: !!user,
-      user: user || null,
+      user: user ?? null,
     };
   }
 }

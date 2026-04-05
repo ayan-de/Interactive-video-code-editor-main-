@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { RecordingManager } from '@/core/RecordingManager';
 import type * as monacoType from 'monaco-editor';
-import {
+import { RecordingState } from '@/types/recordings';
+import type {
   RecordingSessionState,
-  RecordingState,
   RecordingSession,
   Position,
   Selection,
@@ -212,6 +212,10 @@ export function useRecording({
       monacoRef.current = monaco;
 
       const manager = getManager();
+      const model = editor.getModel();
+      if (model) {
+        manager.setLanguage(model.getLanguageId());
+      }
       if (manager.isRecording()) {
         setupMonacoListeners(editor, monaco, manager);
       }

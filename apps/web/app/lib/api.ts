@@ -1,7 +1,7 @@
+import { USER_STORAGE_KEY } from '@/lib/constants';
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
-
-const USER_STORAGE_KEY = 'tantrica_user';
 
 async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${url}`, {

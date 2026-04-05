@@ -7,6 +7,7 @@ import { useRecording } from '@/hooks/useRecordings';
 import { useLoading } from '@/context/LoadingContext';
 import type { RecordingSession } from '@/types/recordings';
 import { env } from '@/config/env';
+import { saveRecording } from '@/lib/recordingStorage';
 
 interface MonacoEditorProps {
   initialTitle?: string;
@@ -44,8 +45,13 @@ export default function MonacoEditor({
         console.log('recording completed', session);
       }
 
-      localStorage.setItem(`recording_${session.id}`, JSON.stringify(session));
-      window.dispatchEvent(new CustomEvent('recording_saved'));
+      saveRecording(session)
+        .then(() => {
+          window.dispatchEvent(new CustomEvent('recording_saved'));
+        })
+        .catch((err) => {
+          console.error('Failed to save recording:', err);
+        });
 
       showSuccess(
         `Recording saved! Duration: ${formatDuration(session.duration)}, Events: ${session.events.length}`

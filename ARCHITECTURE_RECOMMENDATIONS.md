@@ -28,19 +28,20 @@
 
 ## P2 — Near-term
 
-- [ ] Implement snapshot-based seeking in `PlaybackEngine` — periodically save editor state snapshots for O(1) seeks instead of replaying from scratch
-- [ ] Move recording storage from localStorage to IndexedDB — support larger recordings beyond 5-10MB limit
-- [ ] Add typed session interface in API instead of `(req.session as any).user` (`apps/api/src/auth/auth.controller.ts:53`)
-- [ ] Enable `strictNullChecks` in API tsconfig (`apps/api/tsconfig.json`)
-- [ ] Use `ConfigService` for all hardcoded URLs in API — 4x `http://localhost:3000` in `auth.controller.ts:38,45,56,60`, `process.env` in `auth.controller.ts:14-17`
-- [ ] Replace `any` types with proper Monaco editor types in `useRecordings.ts` and `PlaybackViewer.tsx`
-- [ ] Create shared `@repo/types` package — extract duplicated `User` type used in both `apps/web` and `apps/api`
-- [ ] Fix `[key: string]: any` in `recordings.ts:132` — weakens type safety for entire metadata object
-- [ ] Extract `USER_STORAGE_KEY` constant to shared location — currently duplicated in `UserContext.tsx` and `lib/api.ts`
-- [ ] Fix `language: 'javascript'` hardcoded in `RecordingManager.ts:143` — should detect from editor
-- [ ] Fix `auth.controller.ts` manual OAuth URL construction (`auth.controller.ts:10-27`) — should use Passport instead of duplicating GoogleStrategy config
-- [ ] Fix unnecessary re-renders in `view/page.tsx:57` — 2s polling always calls setState even when data unchanged
-- [ ] Use `import type` for type-only imports per AGENTS.md convention — `MonacoEditor.tsx:7`, `PlaybackViewer.tsx`
+23: [x] Implement snapshot-based seeking in `PlaybackEngine` — periodically save editor state snapshots for O(1) seeks instead of replaying from scratch
+
+- [x] Move recording storage from localStorage to IndexedDB — support larger recordings beyond 5-10MB limit
+- [x] Add typed session interface in API instead of `(req.session as any).user` (`apps/api/src/auth/auth.controller.ts:53`)
+- [x] Enable `strictNullChecks` in API tsconfig (`apps/api/tsconfig.json`)
+- [x] Use `ConfigService` for all hardcoded URLs in API — 4x `http://localhost:3000` in `auth.controller.ts:38,45,56,60`, `process.env` in `auth.controller.ts:14-17`
+- [x] Replace `any` types with proper Monaco editor types in `useRecordings.ts` and `PlaybackViewer.tsx`
+- [x] Create shared `@repo/types` package — extract duplicated `User` type used in both `apps/web` and `apps/api`
+- [x] Fix `[key: string]: any` in `recordings.ts:132` — weakens type safety for entire metadata object
+- [x] Extract `USER_STORAGE_KEY` constant to shared location (`lib/constants.ts`) — currently duplicated in `UserContext.tsx` and `lib/api.ts`
+- [x] Fix `language: 'javascript'` hardcoded in `RecordingManager.ts:143` — should detect from editor
+- [x] Fix `auth.controller.ts` manual OAuth URL construction — uses ConfigService instead of duplicating GoogleStrategy config
+- [x] Fix unnecessary re-renders in `view/page.tsx:57` — 2s polling always calls setState even when data unchanged
+- [x] Use `import type` for type-only imports per AGENTS.md convention — `MonacoEditor.tsx:7`, `PlaybackViewer.tsx`
 
 ## P3 — Tech Debt
 

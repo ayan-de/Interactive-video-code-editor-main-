@@ -5,6 +5,10 @@ import Link from 'next/link';
 import PlaybackViewer from '../../components/viewer/PlaybackViewer';
 import { RecordingSession } from '../../types/recordings';
 import { formatDuration } from '@/lib/formatDuration';
+import {
+  getAllRecordings,
+  deleteRecording as deleteRecordingFromDB,
+} from '@/lib/recordingStorage';
 
 export default function ViewPage() {
   const [savedRecordings, setSavedRecordings] = useState<RecordingSession[]>(
@@ -16,46 +20,46 @@ export default function ViewPage() {
 
   // Load saved recordings from localStorage
   useEffect(() => {
-    const loadSavedRecordings = () => {
-      setLoading(true);
-      const recordings: RecordingSession[] = [];
+    const loadSavedRecordings = (showLoading = false) => {
+      if (showLoading) setLoading(true);
+      getAllRecordings()
+        .then((recordings) => {
+          recordings.sort(
+            (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+          );
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('recording_')) {
-          try {
-            const recordingData = localStorage.getItem(key);
-            if (recordingData) {
-              const session = JSON.parse(recordingData) as RecordingSession;
-              session.createdAt = new Date(session.createdAt);
-              session.updatedAt = new Date(session.updatedAt);
-              recordings.push(session);
+          setSavedRecordings((prev) => {
+            if (!showLoading && prev.length === recordings.length) {
+              const same = prev.every(
+                (p, i) =>
+                  p.id === recordings[i]?.id &&
+                  p.updatedAt.getTime() === recordings[i]?.updatedAt.getTime()
+              );
+              if (same) return prev;
             }
-          } catch (error) {
-            console.error('Error parsing recording:', key, error);
+            return recordings;
+          });
+
+          if (showLoading) setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Error loading recordings:', error);
+          if (showLoading) {
+            setSavedRecordings([]);
+            setLoading(false);
           }
-        }
-      }
-
-      recordings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      setSavedRecordings(recordings);
-      setLoading(false);
+        });
     };
 
-    loadSavedRecordings();
+    loadSavedRecordings(true);
 
-    const handleStorageChange = () => {
-      loadSavedRecordings();
-    };
-
-    const handleRecordingSaved = () => {
-      loadSavedRecordings();
-    };
+    const handleStorageChange = () => loadSavedRecordings(false);
+    const handleRecordingSaved = () => loadSavedRecordings(false);
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('recording_saved', handleRecordingSaved);
 
-    const interval = setInterval(loadSavedRecordings, 2000);
+    const interval = setInterval(() => loadSavedRecordings(false), 2000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -74,11 +78,18 @@ export default function ViewPage() {
 
   const deleteRecording = (recordingId: string) => {
     if (confirm('Are you sure you want to delete this recording?')) {
-      localStorage.removeItem(`recording_${recordingId}`);
-      setSavedRecordings((prev) => prev.filter((r) => r.id !== recordingId));
-      if (selectedRecording?.id === recordingId) {
-        setSelectedRecording(null);
-      }
+      deleteRecordingFromDB(recordingId)
+        .then(() => {
+          setSavedRecordings((prev) =>
+            prev.filter((r) => r.id !== recordingId)
+          );
+          if (selectedRecording?.id === recordingId) {
+            setSelectedRecording(null);
+          }
+        })
+        .catch((error) => {
+          console.error('Error deleting recording:', error);
+        });
     }
   };
 

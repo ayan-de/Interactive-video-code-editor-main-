@@ -128,7 +128,7 @@ export interface RecordingSession {
     editorTheme?: string;
     fontSize?: number;
     tabSize?: number;
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
 }
 

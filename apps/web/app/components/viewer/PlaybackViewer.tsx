@@ -3,13 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
 import type * as monacoType from 'monaco-editor';
-import {
-  PlaybackEngine,
-  PlaybackState,
+import { PlaybackEngine, PlaybackState } from '@/core/PlaybackEngine';
+import type {
   PlaybackPosition,
   PlaybackEventHandler,
 } from '@/core/PlaybackEngine';
-import { RecordingSession, ContentChangeEvent } from '@/types/recordings';
+import type { RecordingSession, ContentChangeEvent } from '@/types/recordings';
 import { formatDuration } from '@/lib/formatDuration';
 
 interface PlaybackViewerProps {

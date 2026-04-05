@@ -22,6 +22,7 @@ export class RecordingManager {
   private config: RecordingConfig;
   private eventBuffer: RecordingEvent[] = [];
   private lastEventTime: number = 0;
+  private currentLanguage: string = 'javascript';
 
   constructor(config: Partial<RecordingConfig> = {}) {
     this.config = { ...DEFAULT_RECORDING_CONFIG, ...config };
@@ -140,7 +141,7 @@ export class RecordingManager {
       id: this.sessionState.sessionId!,
       title: sessionTitle,
       description: description,
-      language: 'javascript', // This should be detected
+      language: this.currentLanguage,
       initialContent,
       finalContent,
       duration: finalDuration,
@@ -285,6 +286,10 @@ export class RecordingManager {
   // Check if currently recording
   isRecording(): boolean {
     return this.sessionState.state === RecordingState.RECORDING;
+  }
+
+  setLanguage(language: string): void {
+    this.currentLanguage = language;
   }
 
   // Check if recording is paused
