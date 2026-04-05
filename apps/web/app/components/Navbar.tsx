@@ -10,21 +10,14 @@ export interface NavbarProps {
 }
 
 export default function Navbar({ mainText }: NavbarProps) {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, initiateGoogleLogin } = useAuth();
   const { showLoading, showError } = useLoading();
 
   const handleSignUp = async () => {
     try {
       showLoading('Redirecting to Google...');
-      const response = await fetch('/api/auth/google');
-      const data = await response.json();
-      if (data.data?.authUrl) {
-        window.location.href = data.data.authUrl;
-      } else {
-        showError('Failed to get Google auth URL');
-      }
-    } catch (error) {
-      console.error('Failed to initiate Google login:', error);
+      await initiateGoogleLogin();
+    } catch {
       showError('Failed to initiate Google login');
     }
   };

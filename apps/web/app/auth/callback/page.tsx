@@ -4,9 +4,8 @@ import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUser } from '../../context/UserContext';
 import { useLoading } from '../../context/LoadingContext';
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+import { get } from '../../lib/api';
+import type { AuthResponse } from '../../types/auth';
 
 export default function CallbackPage() {
   const searchParams = useSearchParams();
@@ -31,13 +30,10 @@ export default function CallbackPage() {
 
       if (successParam) {
         try {
-          const res = await fetch(`${API_BASE_URL}/auth/profile`, {
-            credentials: 'include',
-          });
-          const data = await res.json();
+          const data = await get<AuthResponse>('/auth/profile');
 
-          if (!res.ok || !data.data?.user) {
-            throw new Error(data.message || 'Failed to fetch user profile');
+          if (!data.data?.user) {
+            throw new Error('Failed to fetch user profile');
           }
 
           login(data.data.user);
