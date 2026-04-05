@@ -7,12 +7,20 @@ import { useRecording } from '@/hooks/useRecordings';
 import { RecordingSession } from '@/types/recordings';
 import { env } from '@/config/env';
 
-export default function MonacoEditor(): React.JSX.Element {
+interface MonacoEditorProps {
+  initialTitle?: string;
+}
+
+export default function MonacoEditor({
+  initialTitle = '',
+}: MonacoEditorProps): React.JSX.Element {
   const [value, setValue] = useState(
     '// Welcome to the Interactive Code Editor\n// Start typing your code here...\n\nfunction hello() {\n  console.log("Hello World!");\n}\n\n// Click "Start Recording" to begin capturing your coding session\n// All your keystrokes, cursor movements, and selections will be recorded'
   );
 
-  const [sessionTitle, setSessionTitle] = useState('First Coding Session');
+  const [sessionTitle, setSessionTitle] = useState(
+    initialTitle || 'First Coding Session'
+  );
 
   const {
     isRecording,

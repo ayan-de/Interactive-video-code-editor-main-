@@ -13,11 +13,13 @@ import { useState } from 'react';
 interface PlaygroundModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onStartRecording: (title: string) => void;
 }
 
 export default function PlaygroundModal({
   open,
   onOpenChange,
+  onStartRecording,
 }: PlaygroundModalProps) {
   const [title, setTitle] = useState('');
 
@@ -53,7 +55,10 @@ export default function PlaygroundModal({
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={() => {
+                const trimmed = title.trim();
+                if (!trimmed) return;
                 onOpenChange(false);
+                onStartRecording(trimmed);
                 setTitle('');
               }}
             >

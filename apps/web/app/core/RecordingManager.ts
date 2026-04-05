@@ -270,8 +270,6 @@ export class RecordingManager {
 
       if (this.eventBuffer.length >= 100) {
         this.flushEventBuffer();
-      } else {
-        this.events.push(event);
       }
 
       // Prevent memory overflow

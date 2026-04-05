@@ -52,11 +52,8 @@ export class AuthController {
       // Store user in session
       (req.session as any).user = user;
 
-      // Redirect to frontend with success and user data
-      const userData = encodeURIComponent(JSON.stringify(user));
-      return res.redirect(
-        `http://localhost:3000/auth/callback?success=true&user=${userData}`
-      );
+      // Redirect to frontend — user data is read from session via /auth/profile
+      return res.redirect(`http://localhost:3000/auth/callback?success=true`);
     } catch (error) {
       // Redirect to frontend with error
       return res.redirect(

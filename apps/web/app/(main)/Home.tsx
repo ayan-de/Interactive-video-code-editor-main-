@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui/button';
 import SloganText from '../components/SloganText';
 import { PlaygroundCards } from '../components/playgroundCards';
@@ -10,9 +11,15 @@ import PlaygroundModal from '../components/playgroundCards/PlaygroundModal';
 export default function Home() {
   const [recordingCount, setRecordingCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const handleStartRecording = () => {
     setOpen(true);
+  };
+
+  const handleConfirmRecording = (title: string) => {
+    const params = new URLSearchParams({ title });
+    router.push(`/record?${params.toString()}`);
   };
 
   // Count saved recordings
@@ -109,7 +116,11 @@ export default function Home() {
       </section>
 
       {/* Recording Modal */}
-      <PlaygroundModal open={open} onOpenChange={setOpen} />
+      <PlaygroundModal
+        open={open}
+        onOpenChange={setOpen}
+        onStartRecording={handleConfirmRecording}
+      />
     </>
   );
 }

@@ -14,7 +14,14 @@ async function bootstrap() {
   // Configure session middleware
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || 'your-secret-key',
+      secret: (() => {
+        if (!process.env.SESSION_SECRET) {
+          throw new Error(
+            'SESSION_SECRET environment variable is required. Set it before starting the server.'
+          );
+        }
+        return process.env.SESSION_SECRET;
+      })(),
       resave: false,
       saveUninitialized: false,
       cookie: {

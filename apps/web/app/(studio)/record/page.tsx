@@ -1,8 +1,13 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import MonacoEditor from '../../components/editor/MonacoEditor';
 
-export default function RecordPage() {
+function RecordPageContent() {
+  const searchParams = useSearchParams();
+  const title = searchParams.get('title') || '';
+
   return (
     <div className="space-y-6">
       {/* Recording Studio */}
@@ -19,7 +24,7 @@ export default function RecordPage() {
         </div>
 
         <div className="h-[700px]">
-          <MonacoEditor />
+          <MonacoEditor initialTitle={title} />
         </div>
       </div>
 
@@ -130,5 +135,13 @@ export default function RecordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RecordPage() {
+  return (
+    <Suspense>
+      <RecordPageContent />
+    </Suspense>
   );
 }
