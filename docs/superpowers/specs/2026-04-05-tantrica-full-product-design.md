@@ -352,13 +352,13 @@ The core product page. Features:
 
 **Goal**: Make the existing web app production-quality with MongoDB backend.
 
-1.1 **Fix bugs**
+1.1 **Fix bugs** ✅
 
-- Fix RecordingManager.addEvent() buffer duplication bug
-- Fix PlaygroundModal to navigate to /record with title
-- Fix language detection (read from Monaco model)
-- Fix "Untile" typo → "Untitled"
-- Remove dead code (page-old.tsx, unused guard/strategy)
+- [x] ~~Fix RecordingManager.addEvent() buffer duplication bug~~ ✅
+- [x] ~~Fix PlaygroundModal to navigate to /record with title~~ ✅
+- [x] ~~Fix language detection (read from Monaco model + onDidChangeModelLanguage listener)~~ ✅
+- [x] ~~Fix "Untile" typo → "Untitled"~~ ✅
+- [x] ~~Remove dead code (page-old.tsx, page.module.css, AuthenticatedGuard, GoogleStrategy)~~ ✅
 
   1.2 **Add MongoDB**
 

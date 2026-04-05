@@ -229,6 +229,16 @@ export function useRecording({
       if (model) {
         manager.setLanguage(model.getLanguageId());
       }
+
+      const onDidChangeLanguage = monaco.editor.onDidChangeModelLanguage(
+        (e) => {
+          if (model && model.uri === e.model.uri) {
+            manager.setLanguage(e.model.getLanguageId());
+          }
+        }
+      );
+      if (onDidChangeLanguage) disposablesRef.current.push(onDidChangeLanguage);
+
       if (manager.isRecording()) {
         setupMonacoListeners(editor, monaco, manager);
       }
