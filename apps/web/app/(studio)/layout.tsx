@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Aurora from '@/components/Aurora';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useRecordingCount } from '@/hooks/useRecordingCount';
 
 interface StudioLayoutProps {
   children: React.ReactNode;
@@ -13,40 +13,11 @@ interface StudioLayoutProps {
 
 export default function StudioLayout({ children }: StudioLayoutProps) {
   const pathname = usePathname();
-  const [recordingCount, setRecordingCount] = useState(0);
+  const recordingCount = useRecordingCount();
 
   const isRecordPage = pathname?.includes('/record');
   const isViewPage = pathname?.includes('/view');
   const navbarText = isRecordPage ? 'Tantra' : 'Mantra';
-
-  // Count saved recordings
-  useEffect(() => {
-    const countRecordings = () => {
-      let count = 0;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('recording_')) {
-          count++;
-        }
-      }
-      setRecordingCount(count);
-    };
-
-    countRecordings();
-
-    // Update count when storage changes
-    const handleStorageChange = () => {
-      countRecordings();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(countRecordings, 2000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">

@@ -9,11 +9,8 @@ import {
   PlaybackPosition,
   PlaybackEventHandler,
 } from '@/core/PlaybackEngine';
-import {
-  RecordingSession,
-  ContentChangeEvent,
-  RecordingEventType,
-} from '@/types/recordings';
+import { RecordingSession, ContentChangeEvent } from '@/types/recordings';
+import { formatDuration } from '@/lib/formatDuration';
 
 interface PlaybackViewerProps {
   session: RecordingSession | null;
@@ -24,7 +21,6 @@ export default function PlaybackViewer({
   session,
   onClose,
 }: PlaybackViewerProps): React.JSX.Element {
-  // State management
   const [playbackState, setPlaybackState] = useState<PlaybackState>(
     PlaybackState.IDLE
   );
@@ -38,14 +34,89 @@ export default function PlaybackViewer({
   const [editorContent, setEditorContent] = useState<string>('');
   const [isReady, setIsReady] = useState<boolean>(false);
 
-  // Refs
   const engineRef = useRef<PlaybackEngine | null>(null);
   const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(
     null
   );
   const monacoRef = useRef<typeof monacoType | null>(null);
+  const sessionRef = useRef<RecordingSession | null>(session);
+  const handlerRef = useRef<((data: any) => void) | null>(null);
 
-  // Initialize playback engine
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  const handleEventProcessed = useCallback((data: any) => {
+    if (!editorRef.current || !monacoRef.current) return;
+
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    const currentSession = sessionRef.current;
+
+    switch (data.type) {
+      case 'reset':
+        setEditorContent(data.content);
+        if (data.language && currentSession) {
+          monaco.editor.setModelLanguage(editor.getModel()!, data.language);
+        }
+        break;
+
+      case 'contentChange':
+        const contentEvent = data.event as ContentChangeEvent;
+        const model = editor.getModel();
+        if (model && contentEvent.changes) {
+          const edits = contentEvent.changes.map((change) => ({
+            range: new monaco.Range(
+              change.range.startLineNumber,
+              change.range.startColumn,
+              change.range.endLineNumber,
+              change.range.endColumn
+            ),
+            text: change.text,
+          }));
+          model.applyEdits(edits);
+          setEditorContent(model.getValue());
+        }
+        break;
+
+      case 'cursorPosition':
+        const cursorEvent = data.event;
+        if (cursorEvent.position) {
+          editor.setPosition({
+            lineNumber: cursorEvent.position.lineNumber,
+            column: cursorEvent.position.column,
+          });
+        }
+        break;
+
+      case 'selectionChange':
+        const selectionEvent = data.event;
+        if (selectionEvent.selection) {
+          editor.setSelection({
+            startLineNumber: selectionEvent.selection.selectionStartLineNumber,
+            startColumn: selectionEvent.selection.selectionStartColumn,
+            endLineNumber: selectionEvent.selection.positionLineNumber,
+            endColumn: selectionEvent.selection.positionColumn,
+          });
+        }
+        break;
+
+      case 'languageChange':
+        const langEvent = data.event;
+        if (langEvent.language) {
+          const model = editor.getModel();
+          if (model) {
+            monaco.editor.setModelLanguage(model, langEvent.language);
+          }
+        }
+        break;
+    }
+  }, []);
+
+  useEffect(() => {
+    handlerRef.current = handleEventProcessed;
+  }, [handleEventProcessed]);
+
   useEffect(() => {
     if (!engineRef.current) {
       engineRef.current = new PlaybackEngine();
@@ -64,12 +135,11 @@ export default function PlaybackViewer({
           break;
 
         case 'eventProcessed':
-          handleEventProcessed(data);
+          handlerRef.current?.(data);
           break;
 
         case 'error':
           console.error('Playback error:', data);
-          alert(`Playback error: ${data.message}`);
           break;
       }
     };
@@ -82,7 +152,6 @@ export default function PlaybackViewer({
     };
   }, []);
 
-  // Load session when it changes
   useEffect(() => {
     if (session && engineRef.current) {
       engineRef.current.loadSession(session);
@@ -94,90 +163,15 @@ export default function PlaybackViewer({
     }
   }, [session]);
 
-  // Handle processed events
-  const handleEventProcessed = useCallback(
-    (data: any) => {
-      if (!editorRef.current || !monacoRef.current) return;
-
-      const editor = editorRef.current;
-      const monaco = monacoRef.current;
-
-      switch (data.type) {
-        case 'reset':
-          setEditorContent(data.content);
-          if (data.language && session) {
-            monaco.editor.setModelLanguage(editor.getModel()!, data.language);
-          }
-          break;
-
-        case 'contentChange':
-          const contentEvent = data.event as ContentChangeEvent;
-          const model = editor.getModel();
-          if (model && contentEvent.changes) {
-            // Apply changes to the editor
-            const edits = contentEvent.changes.map((change) => ({
-              range: new monaco.Range(
-                change.range.startLineNumber,
-                change.range.startColumn,
-                change.range.endLineNumber,
-                change.range.endColumn
-              ),
-              text: change.text,
-            }));
-            model.applyEdits(edits);
-          }
-          break;
-
-        case 'cursorPosition':
-          const cursorEvent = data.event;
-          if (cursorEvent.position) {
-            editor.setPosition({
-              lineNumber: cursorEvent.position.lineNumber,
-              column: cursorEvent.position.column,
-            });
-          }
-          break;
-
-        case 'selectionChange':
-          const selectionEvent = data.event;
-          if (selectionEvent.selection) {
-            editor.setSelection({
-              startLineNumber:
-                selectionEvent.selection.selectionStartLineNumber,
-              startColumn: selectionEvent.selection.selectionStartColumn,
-              endLineNumber: selectionEvent.selection.positionLineNumber,
-              endColumn: selectionEvent.selection.positionColumn,
-            });
-          }
-          break;
-
-        case 'languageChange':
-          const langEvent = data.event;
-          if (langEvent.language) {
-            const model = editor.getModel();
-            if (model) {
-              monaco.editor.setModelLanguage(model, langEvent.language);
-            }
-          }
-          break;
-      }
-    },
-    [session]
-  );
-
-  // Editor mount handler
   const handleEditorMount = (
     editor: monacoType.editor.IStandaloneCodeEditor,
     monaco: typeof monacoType
   ) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-
-    // Make editor read-only
     editor.updateOptions({ readOnly: true });
   };
 
-  // Playback control handlers
   const handlePlay = () => {
     engineRef.current?.play();
   };
@@ -199,34 +193,17 @@ export default function PlaybackViewer({
     engineRef.current?.setSpeed(newSpeed);
   };
 
-  // Timeline scrubber handler
   const handleTimelineChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const progress = parseFloat(e.target.value);
     const timeMs = (progress * position.totalTime) / 100;
     handleSeek(timeMs);
   };
 
-  // Utility functions
   const formatTime = (ms: number): string => {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  const formatDuration = (ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${seconds}s`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
-    } else {
-      return `${seconds}s`;
-    }
   };
 
   const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
@@ -251,8 +228,8 @@ export default function PlaybackViewer({
         <div>
           <h2 className="text-lg font-semibold">{session.title}</h2>
           <p className="text-sm text-gray-400">
-            {formatDuration(session.duration)} • {session.events.length} events
-            • {session.language}
+            {formatDuration(session.duration, 'verbose')} •{' '}
+            {session.events.length} events • {session.language}
           </p>
         </div>
         {onClose && (

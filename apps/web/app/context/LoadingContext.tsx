@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useCallback,
+  ReactNode,
+} from 'react';
 
 interface LoadingContextType {
   isLoading: boolean;
@@ -24,8 +31,19 @@ export function LoadingProvider({ children }: LoadingProviderProps) {
     type: 'success' | 'error' | null;
     message: string;
   }>({ type: null, message: '' });
+  const notificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  const clearNotificationTimer = useCallback(() => {
+    if (notificationTimerRef.current !== null) {
+      clearTimeout(notificationTimerRef.current);
+      notificationTimerRef.current = null;
+    }
+  }, []);
 
   const showLoading = (message: string = 'Loading...') => {
+    clearNotificationTimer();
     setLoadingMessage(message);
     setIsLoading(true);
     setNotification({ type: null, message: '' });
@@ -36,23 +54,33 @@ export function LoadingProvider({ children }: LoadingProviderProps) {
     setLoadingMessage('');
   };
 
-  const showSuccess = (message: string, duration: number = 3000) => {
-    setIsLoading(false);
-    setLoadingMessage('');
-    setNotification({ type: 'success', message });
-    setTimeout(() => {
-      setNotification({ type: null, message: '' });
-    }, duration);
-  };
+  const showSuccess = useCallback(
+    (message: string, duration: number = 3000) => {
+      clearNotificationTimer();
+      setIsLoading(false);
+      setLoadingMessage('');
+      setNotification({ type: 'success', message });
+      notificationTimerRef.current = setTimeout(() => {
+        setNotification({ type: null, message: '' });
+        notificationTimerRef.current = null;
+      }, duration);
+    },
+    [clearNotificationTimer]
+  );
 
-  const showError = (message: string, duration: number = 4000) => {
-    setIsLoading(false);
-    setLoadingMessage('');
-    setNotification({ type: 'error', message });
-    setTimeout(() => {
-      setNotification({ type: null, message: '' });
-    }, duration);
-  };
+  const showError = useCallback(
+    (message: string, duration: number = 4000) => {
+      clearNotificationTimer();
+      setIsLoading(false);
+      setLoadingMessage('');
+      setNotification({ type: 'error', message });
+      notificationTimerRef.current = setTimeout(() => {
+        setNotification({ type: null, message: '' });
+        notificationTimerRef.current = null;
+      }, duration);
+    },
+    [clearNotificationTimer]
+  );
 
   const value: LoadingContextType = {
     isLoading,

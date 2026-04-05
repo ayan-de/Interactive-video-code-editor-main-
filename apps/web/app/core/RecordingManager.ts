@@ -36,7 +36,7 @@ export class RecordingManager {
     };
   }
 
-  startRecording(sessionTitle: string = 'Untile session'): string {
+  startRecording(sessionTitle: string = 'Untitled session'): string {
     if (this.sessionState.state === RecordingState.RECORDING) {
       throw new Error('Recording already in Progress');
     }
@@ -106,7 +106,7 @@ export class RecordingManager {
   }
 
   stopRecording(
-    sessionTitle: string = 'Untile session',
+    sessionTitle: string = 'Untitled session',
     description: string = 'Provide a description',
     finalContent: string = '',
     initialContent: string = ''
@@ -271,11 +271,8 @@ export class RecordingManager {
       if (this.eventBuffer.length >= 100) {
         this.flushEventBuffer();
       }
-
-      // Prevent memory overflow
-      if (this.events.length > this.config.maxEventBufferSize) {
-        this.events.shift(); // Remove oldest event
-      }
+    } else {
+      this.events.push(event);
     }
   }
 

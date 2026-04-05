@@ -1,10 +1,11 @@
 'use client';
 
 import { Editor } from '@monaco-editor/react';
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import type * as monacoType from 'monaco-editor';
 import { useRecording } from '@/hooks/useRecordings';
-import { RecordingSession } from '@/types/recordings';
+import { useLoading } from '@/context/LoadingContext';
+import type { RecordingSession } from '@/types/recordings';
 import { env } from '@/config/env';
 
 interface MonacoEditorProps {
@@ -21,6 +22,8 @@ export default function MonacoEditor({
   const [sessionTitle, setSessionTitle] = useState(
     initialTitle || 'First Coding Session'
   );
+
+  const { showSuccess, showError } = useLoading();
 
   const {
     isRecording,
@@ -42,21 +45,20 @@ export default function MonacoEditor({
       }
 
       localStorage.setItem(`recording_${session.id}`, JSON.stringify(session));
+      window.dispatchEvent(new CustomEvent('recording_saved'));
 
-      alert(
+      showSuccess(
         `Recording saved! Duration: ${formatDuration(session.duration)}, Events: ${session.events.length}`
       );
     },
     onError: (error: Error) => {
       console.error(' Recording error:', error);
-      alert(`Recording error: ${error.message}`);
+      showError(`Recording error: ${error.message}`);
     },
   });
 
   const handleEditorChange = (newValue: string | undefined, event: any) => {
     setValue(newValue || '');
-
-    //passing the change to the recording hook
     recordingHandleEditorChange(newValue, event);
   };
 
@@ -69,11 +71,9 @@ export default function MonacoEditor({
       console.log('onMount: the monaco instance:', monaco);
     }
 
-    //initializing recording for this editor
     recordingHandleEditorMount(editor, monaco);
   }
 
-  // Recording control handlers
   const handleStartRecording = () => {
     startRecording(sessionTitle);
   };

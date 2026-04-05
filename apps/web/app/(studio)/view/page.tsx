@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PlaybackViewer from '../../components/viewer/PlaybackViewer';
 import { RecordingSession } from '../../types/recordings';
+import { formatDuration } from '@/lib/formatDuration';
 
 export default function ViewPage() {
   const [savedRecordings, setSavedRecordings] = useState<RecordingSession[]>(
@@ -19,7 +20,6 @@ export default function ViewPage() {
       setLoading(true);
       const recordings: RecordingSession[] = [];
 
-      // Iterate through localStorage to find recording sessions
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key?.startsWith('recording_')) {
@@ -27,7 +27,6 @@ export default function ViewPage() {
             const recordingData = localStorage.getItem(key);
             if (recordingData) {
               const session = JSON.parse(recordingData) as RecordingSession;
-              // Convert date strings back to Date objects
               session.createdAt = new Date(session.createdAt);
               session.updatedAt = new Date(session.updatedAt);
               recordings.push(session);
@@ -38,7 +37,6 @@ export default function ViewPage() {
         }
       }
 
-      // Sort by creation date (newest first)
       recordings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setSavedRecordings(recordings);
       setLoading(false);
@@ -46,18 +44,22 @@ export default function ViewPage() {
 
     loadSavedRecordings();
 
-    // Listen for new recordings being saved
     const handleStorageChange = () => {
       loadSavedRecordings();
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    const handleRecordingSaved = () => {
+      loadSavedRecordings();
+    };
 
-    // Also check periodically in case recordings are saved in the same tab
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('recording_saved', handleRecordingSaved);
+
     const interval = setInterval(loadSavedRecordings, 2000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('recording_saved', handleRecordingSaved);
       clearInterval(interval);
     };
   }, []);
@@ -78,13 +80,6 @@ export default function ViewPage() {
         setSelectedRecording(null);
       }
     }
-  };
-
-  const formatDuration = (ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   // Full-screen playback view
@@ -188,7 +183,7 @@ export default function ViewPage() {
                         <span className="text-gray-400">⏱️</span>
                         <div>
                           <div className="font-medium text-gray-700">
-                            {formatDuration(recording.duration)}
+                            {formatDuration(recording.duration, 'short')}
                           </div>
                           <div className="text-xs text-gray-500">Duration</div>
                         </div>

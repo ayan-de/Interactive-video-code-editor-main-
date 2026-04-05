@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../components/ui/button';
 import SloganText from '../components/SloganText';
 import { PlaygroundCards } from '../components/playgroundCards';
 import PlaygroundModal from '../components/playgroundCards/PlaygroundModal';
+import { useRecordingCount } from '@/hooks/useRecordingCount';
 
 export default function Home() {
-  const [recordingCount, setRecordingCount] = useState(0);
+  const recordingCount = useRecordingCount();
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -22,42 +23,13 @@ export default function Home() {
     router.push(`/record?${params.toString()}`);
   };
 
-  // Count saved recordings
-  useEffect(() => {
-    const countRecordings = () => {
-      let count = 0;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('recording_')) {
-          count++;
-        }
-      }
-      setRecordingCount(count);
-    };
-
-    countRecordings();
-
-    // Update count when storage changes
-    const handleStorageChange = () => {
-      countRecordings();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(countRecordings, 2000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, []);
-
   return (
     <>
       {/* Hero Section */}
       <header className="flex-grow flex items-center justify-center text-center px-4 py-50 md:px-6">
         <div className="mb-8 max-w-4xl flex flex-col gap-6">
           <div>
-            <h1 className="text-9xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
               Interactive Video Code Editor
             </h1>
           </div>
@@ -68,7 +40,6 @@ export default function Home() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-6 md:mt-8 px-4">
-            {/* <Link href="/record" className="w-full sm:w-auto"> */}
             <Button
               size="lg"
               className="w-full sm:w-auto bg-white text-black hover:bg-gray-100 font-semibold px-6 sm:px-8 md:px-12 py-3 md:py-4 text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-12 md:h-14 cursor-pointer"
@@ -76,7 +47,6 @@ export default function Home() {
             >
               Start Recording
             </Button>
-            {/* </Link> */}
 
             <Link href="/view" className="w-full sm:w-auto">
               <Button

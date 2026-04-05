@@ -5,9 +5,11 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useRef,
   ReactNode,
 } from 'react';
 import { User } from '../types/auth';
+import { get } from '@/lib/api';
 
 interface UserContextType {
   user: User | null;
@@ -27,21 +29,42 @@ interface UserProviderProps {
 export function UserProvider({ children }: UserProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasValidated = useRef(false);
 
-  // Load user from localStorage on mount
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-      if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
+    if (hasValidated.current) return;
+    hasValidated.current = true;
+
+    const validateSession = async () => {
+      try {
+        const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+
+        const profile = await get<{ user: User }>('/auth/profile').catch(
+          () => null
+        );
+
+        if (profile?.user) {
+          setUser(profile.user);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(profile.user));
+        } else if (storedUser) {
+          localStorage.removeItem(USER_STORAGE_KEY);
+          setUser(null);
+        }
+      } catch {
+        try {
+          const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          }
+        } catch {
+          localStorage.removeItem(USER_STORAGE_KEY);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading user from localStorage:', error);
-      localStorage.removeItem(USER_STORAGE_KEY);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    validateSession();
   }, []);
 
   const login = (userData: User) => {

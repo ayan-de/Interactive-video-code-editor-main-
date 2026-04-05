@@ -57,7 +57,7 @@ export class PlaybackEngine {
   };
 
   private eventHandlers: Set<PlaybackEventHandler> = new Set();
-  private playbackTimer: NodeJS.Timeout | null = null;
+  private rafId: number | null = null;
   private lastUpdateTime: number = 0;
   private startTime: number = 0;
 
@@ -254,14 +254,21 @@ export class PlaybackEngine {
 
   private startPlaybackLoop(): void {
     this.stopPlaybackLoop();
-    this.lastUpdateTime = Date.now();
-    this.playbackTimer = setInterval(() => this.updatePlayback(), 16); // ~60fps
+    this.lastUpdateTime = performance.now();
+    const tick = (now: number) => {
+      this.lastUpdateTime = now;
+      this.updatePlayback();
+      if (this.state === PlaybackState.PLAYING) {
+        this.rafId = requestAnimationFrame(tick);
+      }
+    };
+    this.rafId = requestAnimationFrame(tick);
   }
 
   private stopPlaybackLoop(): void {
-    if (this.playbackTimer) {
-      clearInterval(this.playbackTimer);
-      this.playbackTimer = null;
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
   }
 

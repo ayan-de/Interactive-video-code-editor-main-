@@ -9,6 +9,7 @@ import {
   Selection,
   Range,
 } from '@/types/recordings';
+import { formatDuration } from '@/lib/formatDuration';
 
 export interface UseRecordingProps {
   autoSave?: boolean;
@@ -17,24 +18,20 @@ export interface UseRecordingProps {
 }
 
 export interface UseRecordingReturn {
-  // Recording state
   sessionState: RecordingSessionState;
   isRecording: boolean;
   isPaused: boolean;
   currentDuration: number;
   eventCount: number;
 
-  // Recording controls
   startRecording: (title?: string) => void;
   pauseRecording: () => void;
   resumeRecording: () => void;
   stopRecording: () => RecordingSession | null;
 
-  // Event handlers for Monaco Editor
   handleEditorChange: (value: string | undefined, event: any) => void;
   handleEditorMount: (editor: any, monaco: any) => void;
 
-  // Utility functions
   formatDuration: (ms: number) => string;
   getRecordingManager: () => RecordingManager;
 }
@@ -44,7 +41,13 @@ export function useRecording({
   onSessionComplete,
   onError,
 }: UseRecordingProps): UseRecordingReturn {
-  const recordingManagerRef = useRef<RecordingManager>(new RecordingManager());
+  const recordingManagerRef = useRef<RecordingManager | null>(null);
+  const getManager = useCallback(() => {
+    if (!recordingManagerRef.current) {
+      recordingManagerRef.current = new RecordingManager();
+    }
+    return recordingManagerRef.current;
+  }, []);
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
   const initialContentRef = useRef<string>('');
@@ -63,21 +66,18 @@ export function useRecording({
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const disposablesRef = useRef<any[]>([]);
 
-  // Update session state when recording manager state changes
   const updateSessionState = useCallback(() => {
-    const manager = recordingManagerRef.current;
+    const manager = getManager();
     const newState = manager.getRecordingState();
     setSessionState(newState);
     setCurrentDuration(manager.getCurrentDuration());
-  }, []);
+  }, [getManager]);
 
-  // Start recording
   const startRecording = useCallback(
     (title: string = 'Untitled Session') => {
       try {
-        const manager = recordingManagerRef.current;
+        const manager = getManager();
 
-        // Store initial content
         if (editorRef.current) {
           initialContentRef.current = editorRef.current.getValue() || '';
         }
@@ -85,12 +85,10 @@ export function useRecording({
         const sessionId = manager.startRecording(title);
         updateSessionState();
 
-        // Start duration timer
         durationIntervalRef.current = setInterval(() => {
           setCurrentDuration(manager.getCurrentDuration());
         }, 100);
 
-        // Set up Monaco Editor event listeners if editor is available
         if (editorRef.current && monacoRef.current) {
           setupMonacoListeners(editorRef.current, monacoRef.current, manager);
         }
@@ -100,17 +98,15 @@ export function useRecording({
         onError?.(error as Error);
       }
     },
-    [updateSessionState, onError]
+    [updateSessionState, onError, getManager]
   );
 
-  // Pause recording
   const pauseRecording = useCallback(() => {
     try {
-      const manager = recordingManagerRef.current;
+      const manager = getManager();
       manager.pauseRecording();
       updateSessionState();
 
-      // Clear duration timer
       if (durationIntervalRef.current) {
         clearInterval(durationIntervalRef.current);
         durationIntervalRef.current = null;
@@ -118,28 +114,25 @@ export function useRecording({
     } catch (error) {
       onError?.(error as Error);
     }
-  }, [updateSessionState, onError]);
+  }, [updateSessionState, onError, getManager]);
 
-  // Resume recording
   const resumeRecording = useCallback(() => {
     try {
-      const manager = recordingManagerRef.current;
+      const manager = getManager();
       manager.resumeRecording();
       updateSessionState();
 
-      // Restart duration timer
       durationIntervalRef.current = setInterval(() => {
         setCurrentDuration(manager.getCurrentDuration());
       }, 100);
     } catch (error) {
       onError?.(error as Error);
     }
-  }, [updateSessionState, onError]);
+  }, [updateSessionState, onError, getManager]);
 
-  // Stop recording
   const stopRecording = useCallback(() => {
     try {
-      const manager = recordingManagerRef.current;
+      const manager = getManager();
       const finalContent = editorRef.current?.getValue() || '';
 
       const session = manager.stopRecording(
@@ -150,13 +143,11 @@ export function useRecording({
       );
       updateSessionState();
 
-      // Clear duration timer
       if (durationIntervalRef.current) {
         clearInterval(durationIntervalRef.current);
         durationIntervalRef.current = null;
       }
 
-      // Clean up Monaco listeners
       disposablesRef.current.forEach((d) => d?.dispose?.());
       disposablesRef.current = [];
 
@@ -173,15 +164,20 @@ export function useRecording({
       onError?.(error as Error);
       return null;
     }
-  }, [updateSessionState, onSessionComplete, autoSave, onError, sessionState]);
+  }, [
+    updateSessionState,
+    onSessionComplete,
+    autoSave,
+    onError,
+    sessionState,
+    getManager,
+  ]);
 
-  // Handle editor content changes
   const handleEditorChange = useCallback(
     (value: string | undefined, event: any) => {
-      const manager = recordingManagerRef.current;
+      const manager = getManager();
       if (!manager.isRecording() || !event) return;
 
-      // Record content changes
       if (event.changes && Array.isArray(event.changes)) {
         const changes = event.changes.map((change: any) => ({
           range: {
@@ -204,10 +200,9 @@ export function useRecording({
         );
       }
     },
-    []
+    [getManager]
   );
 
-  // Handle editor mount
   const handleEditorMount = useCallback(
     (
       editor: monacoType.editor.IStandaloneCodeEditor,
@@ -216,16 +211,14 @@ export function useRecording({
       editorRef.current = editor;
       monacoRef.current = monaco;
 
-      // If recording is already active, set up listeners
-      const manager = recordingManagerRef.current;
+      const manager = getManager();
       if (manager.isRecording()) {
         setupMonacoListeners(editor, monaco, manager);
       }
     },
-    []
+    [getManager]
   );
 
-  // Set up Monaco Editor event listeners
   const setupMonacoListeners = useCallback(
     (editor: any, monaco: any, manager: RecordingManager) => {
       if (!editor || !monaco || !manager) {
@@ -233,12 +226,10 @@ export function useRecording({
         return;
       }
 
-      // Clean up existing listeners
       disposablesRef.current.forEach((d) => d?.dispose?.());
       disposablesRef.current = [];
 
       try {
-        // Track cursor position changes
         const onDidChangeCursorPosition = editor.onDidChangeCursorPosition?.(
           (e: any) => {
             if (!manager.isRecording()) return;
@@ -252,7 +243,6 @@ export function useRecording({
           }
         );
 
-        // Track selection changes
         const onDidChangeCursorSelection = editor.onDidChangeCursorSelection?.(
           (e: any) => {
             if (!manager.isRecording()) return;
@@ -269,7 +259,6 @@ export function useRecording({
           }
         );
 
-        // Track keyboard events
         const onKeyDown = editor.onKeyDown?.((e: any) => {
           if (!manager.isRecording()) return;
 
@@ -289,7 +278,6 @@ export function useRecording({
           });
         });
 
-        // Store disposables
         if (onDidChangeCursorPosition)
           disposablesRef.current.push(onDidChangeCursorPosition);
         if (onDidChangeCursorSelection)
@@ -302,7 +290,6 @@ export function useRecording({
     []
   );
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (durationIntervalRef.current) {
@@ -310,16 +297,6 @@ export function useRecording({
       }
       disposablesRef.current.forEach((d) => d?.dispose?.());
     };
-  }, []);
-
-  // Format duration helper
-  const formatDuration = useCallback((ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const milliseconds = Math.floor((ms % 1000) / 10);
-
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
   }, []);
 
   return {
@@ -334,7 +311,7 @@ export function useRecording({
     stopRecording,
     handleEditorChange,
     handleEditorMount,
-    formatDuration,
-    getRecordingManager: () => recordingManagerRef.current,
+    formatDuration: (ms: number) => formatDuration(ms, 'timer'),
+    getRecordingManager: getManager,
   };
 }
