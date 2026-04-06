@@ -3,117 +3,125 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PlaybackViewer from '../../components/viewer/PlaybackViewer';
-import { RecordingSession } from '../../types/recordings';
-import { formatDuration } from '@/lib/formatDuration';
+import { useAuth } from '@/hooks/useAuth';
+import { useLoading } from '@/context/LoadingContext';
 import {
-  getAllRecordings,
-  deleteRecording as deleteRecordingFromDB,
-} from '@/lib/recordingStorage';
+  fetchRecordings,
+  fetchRecordingEvents,
+  deleteRecording as deleteRecordingApi,
+  convertApiRecordingToSession,
+  type RecordingFromApi,
+} from '@/lib/recordingsApi';
+import { formatDuration } from '@/lib/formatDuration';
+import type { RecordingSession } from '@/types/recordings';
 
 export default function ViewPage() {
-  const [savedRecordings, setSavedRecordings] = useState<RecordingSession[]>(
-    []
-  );
-  const [selectedRecording, setSelectedRecording] =
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { showError } = useLoading();
+  const [recordings, setRecordings] = useState<RecordingFromApi[]>([]);
+  const [selectedSession, setSelectedSession] =
     useState<RecordingSession | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load saved recordings from localStorage
   useEffect(() => {
-    const loadSavedRecordings = (showLoading = false) => {
-      if (showLoading) setLoading(true);
-      getAllRecordings()
-        .then((recordings) => {
-          recordings.sort(
-            (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-          );
+    if (!isAuthenticated && !authLoading) {
+      setLoading(false);
+      return;
+    }
+    if (!isAuthenticated) return;
 
-          setSavedRecordings((prev) => {
-            if (!showLoading && prev.length === recordings.length) {
-              const same = prev.every(
-                (p, i) =>
-                  p.id === recordings[i]?.id &&
-                  p.updatedAt.getTime() === recordings[i]?.updatedAt.getTime()
-              );
-              if (same) return prev;
-            }
-            return recordings;
-          });
+    setLoading(true);
+    fetchRecordings()
+      .then((data) => {
+        setRecordings(data.recordings);
+      })
+      .catch((err) => {
+        console.error('Error loading recordings:', err);
+      })
+      .finally(() => setLoading(false));
+  }, [isAuthenticated, authLoading]);
 
-          if (showLoading) setLoading(false);
-        })
-        .catch((error) => {
-          console.error('Error loading recordings:', error);
-          if (showLoading) {
-            setSavedRecordings([]);
-            setLoading(false);
-          }
-        });
-    };
-
-    loadSavedRecordings(true);
-
-    const handleStorageChange = () => loadSavedRecordings(false);
-    const handleRecordingSaved = () => loadSavedRecordings(false);
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('recording_saved', handleRecordingSaved);
-
-    const interval = setInterval(() => loadSavedRecordings(false), 2000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('recording_saved', handleRecordingSaved);
-      clearInterval(interval);
-    };
-  }, []);
-
-  const handleRecordingSelect = (recording: RecordingSession) => {
-    setSelectedRecording(recording);
-  };
-
-  const handleClosePlayback = () => {
-    setSelectedRecording(null);
-  };
-
-  const deleteRecording = (recordingId: string) => {
-    if (confirm('Are you sure you want to delete this recording?')) {
-      deleteRecordingFromDB(recordingId)
-        .then(() => {
-          setSavedRecordings((prev) =>
-            prev.filter((r) => r.id !== recordingId)
-          );
-          if (selectedRecording?.id === recordingId) {
-            setSelectedRecording(null);
-          }
-        })
-        .catch((error) => {
-          console.error('Error deleting recording:', error);
-        });
+  const handleRecordingSelect = async (recording: RecordingFromApi) => {
+    try {
+      const events = await fetchRecordingEvents(recording._id);
+      const session = convertApiRecordingToSession(
+        recording,
+        events
+      ) as RecordingSession;
+      setSelectedSession(session);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to load recording events';
+      showError(message);
     }
   };
 
-  // Full-screen playback view
-  if (selectedRecording) {
+  const handleClosePlayback = () => {
+    setSelectedSession(null);
+  };
+
+  const handleDelete = async (recordingId: string) => {
+    if (!confirm('Are you sure you want to delete this recording?')) return;
+    try {
+      await deleteRecordingApi(recordingId);
+      setRecordings((prev) => prev.filter((r) => r._id !== recordingId));
+      if (selectedSession?.id === recordingId) {
+        setSelectedSession(null);
+      }
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete recording';
+      console.error('Error deleting recording:', err);
+      showError(message);
+    }
+  };
+
+  if (selectedSession) {
     return (
       <div className="fixed inset-0 bg-gray-900 z-50">
         <PlaybackViewer
-          session={selectedRecording}
+          session={selectedSession}
           onClose={handleClosePlayback}
         />
       </div>
     );
   }
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="text-center py-16">
+        <h3 className="text-2xl font-medium text-white mb-3">
+          Sign in to view your recordings
+        </h3>
+        <p className="text-gray-400 mb-6 max-w-md mx-auto">
+          Recordings are stored in your account. Sign in to access them.
+        </p>
+        <Link
+          href="/"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+        >
+          Go Home
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Recordings List */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200">
         <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                Saved Recordings ({savedRecordings.length})
+                Saved Recordings ({recordings.length})
               </h2>
               <p className="text-gray-600 text-sm">
                 Click on any recording to start playback with full interactive
@@ -130,9 +138,9 @@ export default function ViewPage() {
         </div>
 
         <div className="p-6">
-          {savedRecordings.length === 0 ? (
+          {recordings.length === 0 ? (
             <div className="text-center py-16">
-              <div className="text-gray-400 text-8xl mb-6">🎬</div>
+              <div className="text-gray-400 text-8xl mb-6">&#127909;</div>
               <h3 className="text-2xl font-medium text-gray-900 mb-3">
                 No recordings yet
               </h3>
@@ -144,15 +152,15 @@ export default function ViewPage() {
                 href="/record"
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
               >
-                <span>📹</span>
+                <span>&#128249;</span>
                 Start Your First Recording
               </Link>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {savedRecordings.map((recording) => (
+              {recordings.map((recording) => (
                 <div
-                  key={recording.id}
+                  key={recording._id}
                   className="group border border-gray-200 rounded-xl p-6 hover:shadow-lg hover:border-indigo-300 transition-all duration-200 cursor-pointer bg-gradient-to-br from-white to-gray-50"
                   onClick={() => handleRecordingSelect(recording)}
                 >
@@ -163,7 +171,7 @@ export default function ViewPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteRecording(recording.id);
+                        handleDelete(recording._id);
                       }}
                       className="text-red-400 hover:text-red-600 transition-colors p-1 rounded opacity-0 group-hover:opacity-100"
                       title="Delete recording"
@@ -191,7 +199,7 @@ export default function ViewPage() {
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">⏱️</span>
+                        <span className="text-gray-400">&#9201;&#65039;</span>
                         <div>
                           <div className="font-medium text-gray-700">
                             {formatDuration(recording.duration, 'short')}
@@ -200,10 +208,10 @@ export default function ViewPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">📊</span>
+                        <span className="text-gray-400">&#128202;</span>
                         <div>
                           <div className="font-medium text-gray-700">
-                            {recording.events.length}
+                            {recording.eventCount}
                           </div>
                           <div className="text-xs text-gray-500">Events</div>
                         </div>
@@ -212,7 +220,7 @@ export default function ViewPage() {
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">🔧</span>
+                        <span className="text-gray-400">&#128295;</span>
                         <div>
                           <div className="font-medium text-gray-700">
                             {recording.language}
@@ -221,10 +229,10 @@ export default function ViewPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">📅</span>
+                        <span className="text-gray-400">&#128197;</span>
                         <div>
                           <div className="font-medium text-gray-700">
-                            {recording.createdAt.toLocaleDateString()}
+                            {new Date(recording.createdAt).toLocaleDateString()}
                           </div>
                           <div className="text-xs text-gray-500">Created</div>
                         </div>
@@ -238,7 +246,7 @@ export default function ViewPage() {
                         Click to play recording
                       </span>
                       <div className="text-2xl group-hover:scale-110 transition-transform">
-                        ▶️
+                        &#9654;&#65039;
                       </div>
                     </div>
                   </div>
@@ -249,11 +257,10 @@ export default function ViewPage() {
         </div>
       </div>
 
-      {/* Playback Instructions */}
-      {savedRecordings.length > 0 && (
+      {recordings.length > 0 && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6">
           <h3 className="font-semibold text-green-900 mb-4 flex items-center gap-2 text-lg">
-            🎬 Playback Features
+            &#127916; Playback Features
           </h3>
           <div className="grid md:grid-cols-2 gap-6 text-sm text-green-800">
             <div>

@@ -1,4 +1,12 @@
-export type { User } from '@repo/types';
+export interface User {
+  _id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  picture?: string;
+  provider: 'google';
+  providerId: string;
+}
 
 export interface AuthResponse {
   status: number;

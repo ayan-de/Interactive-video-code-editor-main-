@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUser } from '../../context/UserContext';
 import { useLoading } from '../../context/LoadingContext';
 import { get } from '../../lib/api';
 import type { AuthResponse } from '../../types/auth';
 
-export default function CallbackPage() {
+function CallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { login } = useUser();
@@ -54,4 +54,12 @@ export default function CallbackPage() {
   }, [errorParam, successParam, login, showError, showSuccess, router]);
 
   return null;
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense>
+      <CallbackContent />
+    </Suspense>
+  );
 }
