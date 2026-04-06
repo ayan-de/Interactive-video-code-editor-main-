@@ -14,7 +14,7 @@ import {
   Position,
   Selection,
   Range,
-} from '@/types/recordings';
+} from './types';
 
 export class RecordingManager {
   private events: RecordingEvent[] = [];
@@ -56,7 +56,6 @@ export class RecordingManager {
     };
 
     this.events = [];
-    //When eventBuffer reaches a certain size (e.g. 100), it is flushed into events.
     this.eventBuffer = [];
 
     this.addEvent({
@@ -134,7 +133,6 @@ export class RecordingManager {
       sessionId: this.sessionState.sessionId!,
     });
 
-    // Flushing any remaining events
     this.flushEventBuffer();
 
     const session: RecordingSession = {
@@ -151,7 +149,6 @@ export class RecordingManager {
       metadata: {},
     };
 
-    // Reset state
     this.sessionState = {
       sessionId: null,
       state: RecordingState.IDLE,
@@ -180,7 +177,7 @@ export class RecordingManager {
   ): void {
     if (!this.isRecording() || !this.config.captureKeystrokes) return;
 
-    const event: KeystrokeEvent = {
+    const event: RecordingEvent = {
       id: uuidv4(),
       type: RecordingEventType.KEYSTROKE,
       timestamp: Date.now(),
@@ -193,17 +190,15 @@ export class RecordingManager {
     this.addEvent(event);
   }
 
-  // Record cursor position change
   recordCursorPosition(position: Position, previousPosition?: Position): void {
     if (!this.isRecording() || !this.config.captureCursorMovement) return;
 
-    // Debounce rapid cursor movements
     const now = Date.now();
     if (now - this.lastEventTime < this.config.debounceDelay) {
       return;
     }
 
-    const event: CursorPositionEvent = {
+    const event: RecordingEvent = {
       id: uuidv4(),
       type: RecordingEventType.CURSOR_POSITION,
       timestamp: now,
@@ -216,14 +211,13 @@ export class RecordingManager {
     this.lastEventTime = now;
   }
 
-  // Record selection change
   recordSelectionChange(
     selection: Selection,
     previousSelection?: Selection
   ): void {
     if (!this.isRecording() || !this.config.captureSelections) return;
 
-    const event: SelectionChangeEvent = {
+    const event: RecordingEvent = {
       id: uuidv4(),
       type: RecordingEventType.SELECTION_CHANGE,
       timestamp: Date.now(),
@@ -235,7 +229,6 @@ export class RecordingManager {
     this.addEvent(event);
   }
 
-  // Record content change
   recordContentChange(
     changes: Array<{ range: Range; rangeLength: number; text: string }>,
     versionId: number,
@@ -246,7 +239,7 @@ export class RecordingManager {
   ): void {
     if (!this.isRecording() || !this.config.captureContentChanges) return;
 
-    const event: ContentChangeEvent = {
+    const event: RecordingEvent = {
       id: uuidv4(),
       type: RecordingEventType.CONTENT_CHANGE,
       timestamp: Date.now(),
@@ -277,13 +270,11 @@ export class RecordingManager {
     }
   }
 
-  // Flush buffered events to main events array
   private flushEventBuffer(): void {
     this.events.push(...this.eventBuffer);
     this.eventBuffer = [];
   }
 
-  // Check if currently recording
   isRecording(): boolean {
     return this.sessionState.state === RecordingState.RECORDING;
   }
@@ -292,22 +283,18 @@ export class RecordingManager {
     this.currentLanguage = language;
   }
 
-  // Check if recording is paused
   isPaused(): boolean {
     return this.sessionState.state === RecordingState.PAUSED;
   }
 
-  // Get current recording state
   getRecordingState(): RecordingSessionState {
     return { ...this.sessionState };
   }
 
-  // Get current event count
   getEventCount(): number {
     return this.sessionState.eventCount;
   }
 
-  // Get current recording duration
   getCurrentDuration(): number {
     if (
       this.sessionState.state === RecordingState.RECORDING &&
@@ -322,12 +309,10 @@ export class RecordingManager {
     return this.sessionState.currentDuration;
   }
 
-  // Update recording configuration
   updateConfig(newConfig: Partial<RecordingConfig>): void {
     this.config = { ...this.config, ...newConfig };
   }
 
-  // Get current configuration
   getConfig(): RecordingConfig {
     return { ...this.config };
   }

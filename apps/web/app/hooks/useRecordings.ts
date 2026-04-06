@@ -1,14 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { RecordingManager } from '@/core/RecordingManager';
-import type * as monacoType from 'monaco-editor';
-import { RecordingState } from '@/types/recordings';
+import { RecordingManager, RecordingState } from '@repo/tantrica-core';
 import type {
   RecordingSessionState,
   RecordingSession,
   Position,
   Selection,
   Range,
-} from '@/types/recordings';
+} from '@repo/tantrica-core';
+import type * as monacoType from 'monaco-editor';
 import { formatDuration } from '@/lib/formatDuration';
 
 export interface UseRecordingProps {

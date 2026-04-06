@@ -1,5 +1,3 @@
-// Core recording types and interfaces
-
 export interface Position {
   lineNumber: number;
   column: number;
@@ -19,7 +17,6 @@ export interface Selection {
   positionColumn: number;
 }
 
-// Different types of events we can record
 export enum RecordingEventType {
   KEYSTROKE = 'keystroke',
   CURSOR_POSITION = 'cursor_position',
@@ -34,7 +31,6 @@ export enum RecordingEventType {
   RECORDING_STOP = 'recording_stop',
 }
 
-// Base interface for all recording events
 export interface BaseRecordingEvent {
   id: string;
   type: RecordingEventType;
@@ -42,7 +38,6 @@ export interface BaseRecordingEvent {
   sessionId: string;
 }
 
-// Specific event interfaces
 export interface KeystrokeEvent extends BaseRecordingEvent {
   type: RecordingEventType.KEYSTROKE;
   key: string;
@@ -101,7 +96,6 @@ export interface RecordingControlEvent extends BaseRecordingEvent {
     | RecordingEventType.RECORDING_STOP;
 }
 
-// Union type for all possible recording events
 export type RecordingEvent =
   | KeystrokeEvent
   | CursorPositionEvent
@@ -112,7 +106,6 @@ export type RecordingEvent =
   | LanguageChangeEvent
   | RecordingControlEvent;
 
-// Recording session metadata
 export interface RecordingSession {
   id: string;
   title: string;
@@ -120,7 +113,7 @@ export interface RecordingSession {
   language: string;
   initialContent: string;
   finalContent: string;
-  duration: number; // in milliseconds
+  duration: number;
   events: RecordingEvent[];
   createdAt: Date;
   updatedAt: Date;
@@ -132,7 +125,6 @@ export interface RecordingSession {
   };
 }
 
-// Recording state
 export enum RecordingState {
   IDLE = 'idle',
   RECORDING = 'recording',
@@ -151,19 +143,17 @@ export interface RecordingSessionState {
   lastEventTimestamp: number | null;
 }
 
-// Configuration for recording behavior
 export interface RecordingConfig {
   captureKeystrokes: boolean;
   captureCursorMovement: boolean;
   captureSelections: boolean;
   captureContentChanges: boolean;
   captureEditorEvents: boolean;
-  debounceDelay: number; // milliseconds to debounce rapid events
+  debounceDelay: number;
   compressionEnabled: boolean;
   maxEventBufferSize: number;
 }
 
-// Default recording configuration
 export const DEFAULT_RECORDING_CONFIG: RecordingConfig = {
   captureKeystrokes: true,
   captureCursorMovement: true,

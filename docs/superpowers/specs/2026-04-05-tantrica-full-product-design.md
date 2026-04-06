@@ -380,12 +380,12 @@ The core product page. Features:
   - [x] ~~Add /upload page for .tantrica file uploads~~ ✅
   - [x] ~~Fix /playground/[id] to actually work (or remove if VS Code replaces it)~~ ✅ (removed)
 
-    1.5 **File format implementation**
+    1.5 **File format implementation** ✅
 
-- Implement .tantrica writer (JSON + gzip)
-- Implement .tantrica reader/parser
-- Event compression (delta encoding, deduplication)
-- Add as shared package: `packages/tantrica-format`
+  - [x] ~~Implement .tantrica writer (JSON + gzip)~~ ✅
+  - [x] ~~Implement .tantrica reader/parser~~ ✅
+  - [x] ~~Event compression (delta encoding, deduplication)~~ ✅
+  - [x] ~~Add as shared package: `packages/tantrica-core`~~ ✅
 
 ### Phase 2: VS Code Extension
 

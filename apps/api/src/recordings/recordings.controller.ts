@@ -19,7 +19,8 @@ import { RecordingsService } from './recordings.service';
 import { CreateRecordingDto } from './dto/create-recording.dto';
 import { UpdateRecordingDto } from './dto/update-recording.dto';
 import { SessionAuthGuard } from '../common/guards/session-auth.guard';
-import * as zlib from 'zlib';
+import { readTantricaBuffer, writeTantricaBuffer } from '@repo/tantrica-core';
+import type { TantricaFile } from '@repo/tantrica-core';
 
 @Controller('recordings')
 export class RecordingsController {
@@ -93,22 +94,9 @@ export class RecordingsController {
 
     const userId = req.session!.user!._id;
 
-    let parsed: any;
+    let parsed: TantricaFile;
     try {
-      const buffer = file.buffer;
-      if (
-        buffer[0] === 0x54 &&
-        buffer[1] === 0x4e &&
-        buffer[2] === 0x54 &&
-        buffer[3] === 0x43
-      ) {
-        const headerLength = buffer.readUInt32BE(6);
-        const compressedData = buffer.slice(10 + headerLength);
-        const decompressed = zlib.gunzipSync(compressedData);
-        parsed = JSON.parse(decompressed.toString('utf-8'));
-      } else {
-        parsed = JSON.parse(buffer.toString('utf-8'));
-      }
+      parsed = readTantricaBuffer(file.buffer);
     } catch (e: any) {
       return {
         status: 400,
@@ -118,11 +106,11 @@ export class RecordingsController {
     }
 
     const dto: CreateRecordingDto = {
-      title: parsed.metadata?.title ?? parsed.title ?? file.originalname,
-      description: parsed.metadata?.description ?? parsed.description,
-      language: parsed.metadata?.language ?? parsed.language ?? 'javascript',
-      duration: parsed.metadata?.duration ?? parsed.duration ?? 0,
-      eventCount: parsed.metadata?.eventCount ?? parsed.eventCount ?? 0,
+      title: parsed.metadata?.title ?? file.originalname,
+      description: parsed.metadata?.description,
+      language: parsed.metadata?.language ?? 'javascript',
+      duration: parsed.metadata?.duration ?? 0,
+      eventCount: parsed.metadata?.eventCount ?? 0,
       initialContent: parsed.initialContent ?? '',
       finalContent: parsed.finalContent ?? '',
       editorConfig: parsed.editorConfig ?? {
@@ -131,7 +119,7 @@ export class RecordingsController {
         theme: 'vs-dark',
         wordWrap: true,
       },
-      tags: parsed.metadata?.tags ?? parsed.tags ?? [],
+      tags: parsed.metadata?.tags ?? [],
       isPublic: false,
       events: parsed.events ?? [],
     };
@@ -199,8 +187,8 @@ export class RecordingsController {
     const recording = await this.recordingsService.findOne(id, userId);
     const events = await this.recordingsService.getAllEvents(id);
 
-    const payload = {
-      version: 1 as const,
+    const file: TantricaFile = {
+      version: 1,
       metadata: {
         id: recording._id.toString(),
         title: recording.title,
@@ -218,28 +206,10 @@ export class RecordingsController {
       initialContent: recording.initialContent,
       finalContent: recording.finalContent,
       editorConfig: recording.editorConfig,
-      events,
+      events: events as TantricaFile['events'],
     };
 
-    const jsonStr = JSON.stringify(payload);
-    const compressed = zlib.gzipSync(Buffer.from(jsonStr, 'utf-8'));
-
-    const headerJson = JSON.stringify(payload.metadata);
-    const headerBuf = Buffer.from(headerJson, 'utf-8');
-
-    const magic = Buffer.from('TNTC', 'ascii');
-    const version = Buffer.alloc(2);
-    version.writeUInt16BE(1, 0);
-    const headerLen = Buffer.alloc(4);
-    headerLen.writeUInt32BE(headerBuf.length, 0);
-
-    const tantricaFile = Buffer.concat([
-      magic,
-      version,
-      headerLen,
-      headerBuf,
-      compressed,
-    ]);
+    const tantricaFile = writeTantricaBuffer(file);
 
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader(

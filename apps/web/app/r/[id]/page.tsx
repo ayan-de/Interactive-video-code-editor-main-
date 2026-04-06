@@ -9,7 +9,7 @@ import {
   incrementPlayCount,
   convertApiRecordingToSession,
 } from '@/lib/recordingsApi';
-import type { RecordingSession } from '@/types/recordings';
+import type { RecordingSession } from '@repo/tantrica-core';
 
 export default function RecordingPlayerPage() {
   const params = useParams();

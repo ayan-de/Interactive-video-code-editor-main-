@@ -13,7 +13,7 @@ import {
   type RecordingFromApi,
 } from '@/lib/recordingsApi';
 import { formatDuration } from '@/lib/formatDuration';
-import type { RecordingSession } from '@/types/recordings';
+import type { RecordingSession } from '@repo/tantrica-core';
 
 export default function ViewPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();

@@ -1,4 +1,4 @@
-import type { RecordingSession, RecordingEvent } from '@/types/recordings';
+import type { RecordingSession, RecordingEvent } from '@repo/tantrica-core';
 import type { RecordingStorage, RecordingListResult } from './types';
 import {
   saveRecording,

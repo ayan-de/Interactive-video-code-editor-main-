@@ -1,4 +1,4 @@
-import type { RecordingSession } from '@/types/recordings';
+import type { RecordingSession } from '@repo/tantrica-core';
 
 const DB_NAME = 'tantrica_recordings';
 const STORE_NAME = 'recordings';

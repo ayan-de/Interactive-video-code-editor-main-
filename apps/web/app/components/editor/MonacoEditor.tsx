@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import type * as monacoType from 'monaco-editor';
 import { useRecording } from '@/hooks/useRecordings';
 import { useLoading } from '@/context/LoadingContext';
-import type { RecordingSession } from '@/types/recordings';
+import type { RecordingSession } from '@repo/tantrica-core';
 import { env } from '@/config/env';
 import { getRecordingStorage } from '@/lib/storage';
 import { useAuth } from '@/hooks/useAuth';

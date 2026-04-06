@@ -7,13 +7,8 @@ import {
   SelectionChangeEvent,
   KeystrokeEvent,
   LanguageChangeEvent,
-  EditorFocusEvent,
-  EditorBlurEvent,
-  RecordingControlEvent,
-  Position,
   Range,
-  Selection,
-} from '@/types/recordings';
+} from './types';
 
 export enum PlaybackState {
   IDLE = 'idle',
@@ -27,11 +22,11 @@ export interface PlaybackPosition {
   currentTime: number;
   totalTime: number;
   currentEventIndex: number;
-  progress: number; // 0-1
+  progress: number;
 }
 
 export interface PlaybackOptions {
-  speed: number; // 0.5x, 1x, 2x etc
+  speed: number;
   skipPauses: boolean;
   autoLoop: boolean;
 }
@@ -40,6 +35,38 @@ export type PlaybackEventHandler = (event: {
   type: 'stateChange' | 'positionUpdate' | 'eventProcessed' | 'error';
   data: any;
 }) => void;
+
+export interface SchedulerOptions {
+  requestAnimationFrame: (cb: (time: number) => void) => number;
+  cancelAnimationFrame: (id: number) => void;
+  performanceNow: () => number;
+}
+
+const DEFAULT_SCHEDULER: SchedulerOptions = {
+  requestAnimationFrame:
+    typeof globalThis.requestAnimationFrame !== 'undefined'
+      ? (globalThis.requestAnimationFrame as unknown as (
+          cb: (time: number) => void
+        ) => number)
+      : (cb) =>
+          (globalThis as any).setTimeout
+            ? ((globalThis as any).setTimeout(
+                () => cb(Date.now()),
+                16
+              ) as unknown as number)
+            : 0,
+  cancelAnimationFrame:
+    typeof globalThis.cancelAnimationFrame !== 'undefined'
+      ? (globalThis.cancelAnimationFrame as unknown as (id: number) => void)
+      : (id: number) => {
+          if ((globalThis as any).clearTimeout)
+            (globalThis as any).clearTimeout(id);
+        },
+  performanceNow:
+    typeof globalThis.performance !== 'undefined'
+      ? () => globalThis.performance.now()
+      : () => Date.now(),
+};
 
 export class PlaybackEngine {
   private session: RecordingSession | null = null;
@@ -60,6 +87,7 @@ export class PlaybackEngine {
   private rafId: number | null = null;
   private lastUpdateTime: number = 0;
   private startTime: number = 0;
+  private scheduler: SchedulerOptions;
 
   private snapshots: Map<number, { content: string; language: string }> =
     new Map();
@@ -67,11 +95,11 @@ export class PlaybackEngine {
   private currentLanguage: string = '';
   private snapshotInterval: number = 50;
 
-  constructor() {
+  constructor(scheduler?: Partial<SchedulerOptions>) {
+    this.scheduler = { ...DEFAULT_SCHEDULER, ...scheduler };
     this.reset();
   }
 
-  // Event handler management
   public addEventHandler(handler: PlaybackEventHandler): void {
     this.eventHandlers.add(handler);
   }
@@ -93,7 +121,6 @@ export class PlaybackEngine {
     });
   }
 
-  // Session management
   public loadSession(session: RecordingSession): void {
     this.stop();
     this.session = session;
@@ -122,7 +149,6 @@ export class PlaybackEngine {
     return this.session;
   }
 
-  // Playback controls
   public play(): void {
     if (!this.session || this.session.events.length === 0) {
       this.emit('error', { message: 'No session loaded or session is empty' });
@@ -134,7 +160,6 @@ export class PlaybackEngine {
     }
 
     if (this.position.currentEventIndex >= this.session.events.length) {
-      // At the end, restart from beginning
       this.seek(0);
     }
 
@@ -179,10 +204,8 @@ export class PlaybackEngine {
 
     this.state = PlaybackState.SEEKING;
 
-    // Clamp time to valid range
     timeMs = Math.max(0, Math.min(timeMs, this.position.totalTime));
 
-    // Find the event index for this time
     const firstEvent =
       this.session.events.length > 0 ? this.session.events[0] : null;
     const firstEventTime = firstEvent ? firstEvent.timestamp : 0;
@@ -203,7 +226,6 @@ export class PlaybackEngine {
     this.position.progress =
       this.position.totalTime > 0 ? timeMs / this.position.totalTime : 0;
 
-    // Apply all events up to the current position
     this.applyEventsUpToIndex(eventIndex);
 
     this.emit('positionUpdate', { ...this.position });
@@ -220,7 +242,6 @@ export class PlaybackEngine {
     this.emit('stateChange', { state: this.state });
   }
 
-  // Playback options
   public setSpeed(speed: number): void {
     const wasPlaying = this.state === PlaybackState.PLAYING;
     if (wasPlaying) {
@@ -238,7 +259,6 @@ export class PlaybackEngine {
     this.options = { ...this.options, ...options };
   }
 
-  // Getters
   public getState(): PlaybackState {
     return this.state;
   }
@@ -251,7 +271,6 @@ export class PlaybackEngine {
     return { ...this.options };
   }
 
-  // Private methods
   private reset(): void {
     this.position = {
       currentTime: 0,
@@ -264,20 +283,20 @@ export class PlaybackEngine {
 
   private startPlaybackLoop(): void {
     this.stopPlaybackLoop();
-    this.lastUpdateTime = performance.now();
+    this.lastUpdateTime = this.scheduler.performanceNow();
     const tick = (now: number) => {
       this.lastUpdateTime = now;
       this.updatePlayback();
       if (this.state === PlaybackState.PLAYING) {
-        this.rafId = requestAnimationFrame(tick);
+        this.rafId = this.scheduler.requestAnimationFrame(tick);
       }
     };
-    this.rafId = requestAnimationFrame(tick);
+    this.rafId = this.scheduler.requestAnimationFrame(tick);
   }
 
   private stopPlaybackLoop(): void {
     if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId);
+      this.scheduler.cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
   }
@@ -291,13 +310,11 @@ export class PlaybackEngine {
     const realTimeElapsed = now - this.startTime;
     this.position.currentTime = realTimeElapsed * this.options.speed;
 
-    // Update progress
     this.position.progress =
       this.position.totalTime > 0
         ? Math.min(1, this.position.currentTime / this.position.totalTime)
         : 0;
 
-    // Process events that should have occurred by now
     const firstEvent =
       this.session.events.length > 0 ? this.session.events[0] : null;
     const firstEventTime = firstEvent ? firstEvent.timestamp : 0;
@@ -312,7 +329,6 @@ export class PlaybackEngine {
       this.position.currentEventIndex++;
     }
 
-    // Check if we've reached the end
     if (this.position.currentEventIndex >= this.session.events.length) {
       if (this.options.autoLoop) {
         this.seek(0);
@@ -323,7 +339,6 @@ export class PlaybackEngine {
       }
     }
 
-    // Emit position update
     this.emit('positionUpdate', { ...this.position });
   }
 
@@ -423,7 +438,6 @@ export class PlaybackEngine {
           break;
         }
 
-        // Control events don't need special handling during playback
         case RecordingEventType.RECORDING_START:
         case RecordingEventType.RECORDING_PAUSE:
         case RecordingEventType.RECORDING_RESUME:
@@ -445,7 +459,6 @@ export class PlaybackEngine {
     }
   }
 
-  // Cleanup
   private applyTextChange(
     content: string,
     change: { range: Range; text: string }

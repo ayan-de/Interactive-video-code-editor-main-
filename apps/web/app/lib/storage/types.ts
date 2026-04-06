@@ -1,4 +1,4 @@
-import type { RecordingSession, RecordingEvent } from '@/types/recordings';
+import type { RecordingSession, RecordingEvent } from '@repo/tantrica-core';
 
 export interface RecordingListResult {
   recordings: RecordingSession[];
