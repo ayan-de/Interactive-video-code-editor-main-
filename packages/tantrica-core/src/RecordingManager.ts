@@ -14,7 +14,7 @@ import {
   Position,
   Selection,
   Range,
-} from './types';
+} from './types.js';
 
 export class RecordingManager {
   private events: RecordingEvent[] = [];

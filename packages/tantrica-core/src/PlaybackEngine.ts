@@ -8,7 +8,7 @@ import {
   KeystrokeEvent,
   LanguageChangeEvent,
   Range,
-} from './types';
+} from './types.js';
 
 export enum PlaybackState {
   IDLE = 'idle',

@@ -1,4 +1,4 @@
-import type { RecordingEvent, RecordingSession } from './types';
+import type { RecordingEvent, RecordingSession } from './types.js';
 
 const MAGIC_BYTES = Buffer.from('TNTC', 'ascii');
 const FORMAT_VERSION = 1;
