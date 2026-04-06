@@ -7,8 +7,7 @@ import { useRecording } from '@/hooks/useRecordings';
 import { useLoading } from '@/context/LoadingContext';
 import type { RecordingSession } from '@/types/recordings';
 import { env } from '@/config/env';
-import { saveRecording } from '@/lib/recordingStorage';
-import { createRecording } from '@/lib/recordingsApi';
+import { getRecordingStorage } from '@/lib/storage';
 import { useAuth } from '@/hooks/useAuth';
 
 interface MonacoEditorProps {
@@ -28,6 +27,7 @@ export default function MonacoEditor({
 
   const { showSuccess, showError } = useLoading();
   const { isAuthenticated } = useAuth();
+  const storage = getRecordingStorage(() => isAuthenticated);
 
   const {
     isRecording,
@@ -48,29 +48,11 @@ export default function MonacoEditor({
         console.log('recording completed', session);
       }
 
-      saveRecording(session)
-        .then(() => {
-          window.dispatchEvent(new CustomEvent('recording_saved'));
-        })
-        .catch((err) => {
-          console.error('Failed to save recording locally:', err);
-        });
-
-      if (isAuthenticated) {
-        try {
-          await createRecording({
-            title: session.title,
-            description: session.description,
-            language: session.language,
-            duration: session.duration,
-            eventCount: session.events.length,
-            initialContent: session.initialContent,
-            finalContent: session.finalContent,
-            events: session.events as Record<string, any>[],
-          });
-        } catch (err) {
-          console.error('Failed to save recording to API:', err);
-        }
+      try {
+        await storage.save(session);
+        window.dispatchEvent(new CustomEvent('recording_saved'));
+      } catch (err) {
+        console.error('Failed to save recording:', err);
       }
 
       showSuccess(
