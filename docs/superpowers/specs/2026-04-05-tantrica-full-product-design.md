@@ -367,21 +367,20 @@ The core product page. Features:
 - [x] ~~Add .env.example with all required vars~~ ✅
 - [x] ~~Migrate auth to persist users in DB~~ ✅
 
-  1.3 **Recording API**
+  1.3 **Recording API** ✅
+  - [x] ~~CRUD endpoints for recordings~~ ✅
+  - [x] ~~Upload .tantrica file endpoint~~ ✅
+  - [x] ~~Event streaming endpoint (paginated)~~ ✅
 
-- CRUD endpoints for recordings
-- Upload .tantrica file endpoint
-- Event streaming endpoint (paginated)
+    1.4 **Connect web app to backend** ✅
 
-  1.4 **Connect web app to backend**
+  - [x] ~~Replace localStorage with API calls on /view page~~ ✅
+  - [x] ~~Add /dashboard page with user's recordings~~ ✅
+  - [x] ~~Add /r/:id public player route~~ ✅
+  - [x] ~~Add /upload page for .tantrica file uploads~~ ✅
+  - [x] ~~Fix /playground/[id] to actually work (or remove if VS Code replaces it)~~ ✅ (removed)
 
-- Replace localStorage with API calls on /view page
-- Add /dashboard page with user's recordings
-- Add /r/:id public player route
-- Add /upload page for .tantrica file uploads
-- Fix /playground/[id] to actually work (or remove if VS Code replaces it)
-
-  1.5 **File format implementation**
+    1.5 **File format implementation**
 
 - Implement .tantrica writer (JSON + gzip)
 - Implement .tantrica reader/parser
