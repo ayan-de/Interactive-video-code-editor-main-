@@ -3,17 +3,25 @@ import { USER_STORAGE_KEY } from '@/lib/constants';
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
+interface RequestOptions extends RequestInit {
+  skipRedirectOn401?: boolean;
+}
+
+async function request<T>(
+  url: string,
+  options: RequestOptions = {}
+): Promise<T> {
+  const { skipRedirectOn401, ...fetchOptions } = options;
   const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
+    ...fetchOptions,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...fetchOptions.headers,
     },
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && !skipRedirectOn401) {
     localStorage.removeItem(USER_STORAGE_KEY);
     if (
       typeof window !== 'undefined' &&
@@ -34,31 +42,52 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   return response.json();
 }
 
-export async function get<T>(url: string): Promise<T> {
-  return request<T>(url, { method: 'GET' });
+export async function get<T>(
+  url: string,
+  options?: RequestOptions
+): Promise<T> {
+  return request<T>(url, { ...options, method: 'GET' });
 }
 
-export async function post<T>(url: string, data?: unknown): Promise<T> {
+export async function post<T>(
+  url: string,
+  data?: unknown,
+  options?: RequestOptions
+): Promise<T> {
   return request<T>(url, {
+    ...options,
     method: 'POST',
     body: data ? JSON.stringify(data) : undefined,
   });
 }
 
-export async function put<T>(url: string, data?: unknown): Promise<T> {
+export async function put<T>(
+  url: string,
+  data?: unknown,
+  options?: RequestOptions
+): Promise<T> {
   return request<T>(url, {
+    ...options,
     method: 'PUT',
     body: data ? JSON.stringify(data) : undefined,
   });
 }
 
-export async function patch<T>(url: string, data?: unknown): Promise<T> {
+export async function patch<T>(
+  url: string,
+  data?: unknown,
+  options?: RequestOptions
+): Promise<T> {
   return request<T>(url, {
+    ...options,
     method: 'PATCH',
     body: data ? JSON.stringify(data) : undefined,
   });
 }
 
-export async function del<T>(url: string): Promise<T> {
-  return request<T>(url, { method: 'DELETE' });
+export async function del<T>(
+  url: string,
+  options?: RequestOptions
+): Promise<T> {
+  return request<T>(url, { ...options, method: 'DELETE' });
 }

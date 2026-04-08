@@ -61,10 +61,12 @@ const API_BASE_URL =
 
 export async function fetchRecordings(
   page = 1,
-  limit = 20
+  limit = 20,
+  skipRedirectOn401 = false
 ): Promise<RecordingsListResponse> {
   const res = await get<ApiListResponse>(
-    `/recordings?page=${page}&limit=${limit}`
+    `/recordings?page=${page}&limit=${limit}`,
+    { skipRedirectOn401 }
   );
   return res.data;
 }

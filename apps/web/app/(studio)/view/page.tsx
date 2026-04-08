@@ -1,54 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import PlaybackViewer from '../../components/viewer/PlaybackViewer';
-import { useAuth } from '@/hooks/useAuth';
 import { useLoading } from '@/context/LoadingContext';
-import {
-  fetchRecordings,
-  fetchRecordingEvents,
-  deleteRecording as deleteRecordingApi,
-  convertApiRecordingToSession,
-  type RecordingFromApi,
-} from '@/lib/recordingsApi';
+import { useAuth } from '@/hooks/useAuth';
+import { getRecordingStorage } from '@/lib/storage';
 import { formatDuration } from '@/lib/formatDuration';
 import type { RecordingSession } from '@repo/tantrica-core';
 
 export default function ViewPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { showError } = useLoading();
-  const [recordings, setRecordings] = useState<RecordingFromApi[]>([]);
+  const { isAuthenticated } = useAuth();
+  const [recordings, setRecordings] = useState<RecordingSession[]>([]);
   const [selectedSession, setSelectedSession] =
     useState<RecordingSession | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isAuthenticated && !authLoading) {
-      setLoading(false);
-      return;
-    }
-    if (!isAuthenticated) return;
-
+  const loadRecordings = useCallback(() => {
     setLoading(true);
-    fetchRecordings()
-      .then((data) => {
-        setRecordings(data.recordings);
+    const storage = getRecordingStorage(() => isAuthenticated);
+    storage
+      .list(1, 50)
+      .then((result) => {
+        setRecordings(result.recordings);
       })
       .catch((err) => {
         console.error('Error loading recordings:', err);
       })
       .finally(() => setLoading(false));
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated]);
 
-  const handleRecordingSelect = async (recording: RecordingFromApi) => {
+  useEffect(() => {
+    loadRecordings();
+  }, [loadRecordings]);
+
+  const handleRecordingSelect = async (recording: RecordingSession) => {
     try {
-      const events = await fetchRecordingEvents(recording._id);
-      const session = convertApiRecordingToSession(
-        recording,
-        events
-      ) as RecordingSession;
-      setSelectedSession(session);
+      const storage = getRecordingStorage(() => isAuthenticated);
+      const events = await storage.getEvents(recording.id);
+      setSelectedSession({ ...recording, events });
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to load recording events';
@@ -63,8 +54,9 @@ export default function ViewPage() {
   const handleDelete = async (recordingId: string) => {
     if (!confirm('Are you sure you want to delete this recording?')) return;
     try {
-      await deleteRecordingApi(recordingId);
-      setRecordings((prev) => prev.filter((r) => r._id !== recordingId));
+      const storage = getRecordingStorage(() => isAuthenticated);
+      await storage.delete(recordingId);
+      setRecordings((prev) => prev.filter((r) => r.id !== recordingId));
       if (selectedSession?.id === recordingId) {
         setSelectedSession(null);
       }
@@ -83,33 +75,6 @@ export default function ViewPage() {
           session={selectedSession}
           onClose={handleClosePlayback}
         />
-      </div>
-    );
-  }
-
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="text-center py-16">
-        <h3 className="text-2xl font-medium text-white mb-3">
-          Sign in to view your recordings
-        </h3>
-        <p className="text-gray-400 mb-6 max-w-md mx-auto">
-          Recordings are stored in your account. Sign in to access them.
-        </p>
-        <Link
-          href="/"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
-        >
-          Go Home
-        </Link>
       </div>
     );
   }
@@ -138,7 +103,7 @@ export default function ViewPage() {
         </div>
 
         <div className="p-6">
-          {recordings.length === 0 ? (
+          {recordings.length === 0 && !loading ? (
             <div className="text-center py-16">
               <div className="text-gray-400 text-8xl mb-6">&#127909;</div>
               <h3 className="text-2xl font-medium text-gray-900 mb-3">
@@ -160,7 +125,7 @@ export default function ViewPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recordings.map((recording) => (
                 <div
-                  key={recording._id}
+                  key={recording.id}
                   className="group border border-gray-200 rounded-xl p-6 hover:shadow-lg hover:border-indigo-300 transition-all duration-200 cursor-pointer bg-gradient-to-br from-white to-gray-50"
                   onClick={() => handleRecordingSelect(recording)}
                 >
@@ -171,7 +136,7 @@ export default function ViewPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(recording._id);
+                        handleDelete(recording.id);
                       }}
                       className="text-red-400 hover:text-red-600 transition-colors p-1 rounded opacity-0 group-hover:opacity-100"
                       title="Delete recording"
@@ -211,7 +176,7 @@ export default function ViewPage() {
                         <span className="text-gray-400">&#128202;</span>
                         <div>
                           <div className="font-medium text-gray-700">
-                            {recording.eventCount}
+                            {recording.events?.length ?? 0}
                           </div>
                           <div className="text-xs text-gray-500">Events</div>
                         </div>
@@ -232,7 +197,11 @@ export default function ViewPage() {
                         <span className="text-gray-400">&#128197;</span>
                         <div>
                           <div className="font-medium text-gray-700">
-                            {new Date(recording.createdAt).toLocaleDateString()}
+                            {recording.createdAt
+                              ? new Date(
+                                  recording.createdAt
+                                ).toLocaleDateString()
+                              : '—'}
                           </div>
                           <div className="text-xs text-gray-500">Created</div>
                         </div>

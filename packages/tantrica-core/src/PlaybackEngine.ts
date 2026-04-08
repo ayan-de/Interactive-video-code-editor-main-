@@ -45,9 +45,7 @@ export interface SchedulerOptions {
 const DEFAULT_SCHEDULER: SchedulerOptions = {
   requestAnimationFrame:
     typeof globalThis.requestAnimationFrame !== 'undefined'
-      ? (globalThis.requestAnimationFrame as unknown as (
-          cb: (time: number) => void
-        ) => number)
+      ? (cb: (time: number) => void) => globalThis.requestAnimationFrame(cb)
       : (cb) =>
           (globalThis as any).setTimeout
             ? ((globalThis as any).setTimeout(
@@ -57,7 +55,7 @@ const DEFAULT_SCHEDULER: SchedulerOptions = {
             : 0,
   cancelAnimationFrame:
     typeof globalThis.cancelAnimationFrame !== 'undefined'
-      ? (globalThis.cancelAnimationFrame as unknown as (id: number) => void)
+      ? (id: number) => globalThis.cancelAnimationFrame(id)
       : (id: number) => {
           if ((globalThis as any).clearTimeout)
             (globalThis as any).clearTimeout(id);
