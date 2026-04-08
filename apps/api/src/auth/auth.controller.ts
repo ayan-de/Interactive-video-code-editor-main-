@@ -85,16 +85,16 @@ export class AuthController {
   }
 
   @Get('profile')
-  async getProfile(@Req() req: Request) {
+  async getProfile(@Req() req: Request, @Res() res: Response) {
     const user = req.session.user;
 
     if (!user) {
-      return {
+      return res.status(401).json({
         status: 401,
         code: 'NOT_AUTHENTICATED',
         message: 'Not authenticated',
         error: 'Unauthorized',
-      };
+      });
     }
 
     return {

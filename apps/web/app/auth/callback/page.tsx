@@ -38,7 +38,9 @@ function CallbackContent() {
 
           login(data.data.user);
           showSuccess('You have been signed in successfully!');
-          setTimeout(() => router.push('/'), 1500);
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1500);
         } catch (err: any) {
           console.error('Failed to fetch user profile:', err);
           showError('Failed to process authentication data');
