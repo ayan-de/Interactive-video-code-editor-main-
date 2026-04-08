@@ -16,7 +16,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
 
   const isRecordPage = pathname?.includes('/record');
   const isViewPage = pathname?.includes('/view');
-  const navbarText = isRecordPage ? 'Tantra' : 'Mantra';
+  const navbarText = isRecordPage ? 'Video' : 'Video2';
 
   return (
     <div className="min-h-screen bg-[#20201e] flex flex-col">
