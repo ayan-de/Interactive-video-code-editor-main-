@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { FaClock, FaBolt, FaCode, FaCalendar } from 'react-icons/fa';
 import PlaybackViewer from '../../components/viewer/PlaybackViewer';
 import { useLoading } from '@/context/LoadingContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -162,6 +163,7 @@ export default function ViewPage() {
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
+                        <FaClock className="text-primary" />
                         <div>
                           <div className="font-medium text-card-foreground">
                             {formatDuration(recording.duration, 'short')}
@@ -172,6 +174,7 @@ export default function ViewPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <FaBolt className="text-primary" />
                         <div>
                           <div className="font-medium text-card-foreground">
                             {recording.events?.length ?? 0}
@@ -185,6 +188,7 @@ export default function ViewPage() {
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
+                        <FaCode className="text-primary" />
                         <div>
                           <div className="font-medium text-card-foreground">
                             {recording.language}
@@ -195,6 +199,7 @@ export default function ViewPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <FaCalendar className="text-primary" />
                         <div>
                           <div className="font-medium text-card-foreground">
                             {recording.createdAt
