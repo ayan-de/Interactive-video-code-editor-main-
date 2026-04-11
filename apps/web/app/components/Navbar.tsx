@@ -39,7 +39,7 @@ export default function Navbar({ mainText }: NavbarProps) {
             <Button
               onClick={handleSignUp}
               size="sm"
-              className="bg-white text-black hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 text-xs md:text-sm font-semibold rounded-full transition-all duration-300 cursor-pointer"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 px-2 md:px-4 py-1 md:py-2 text-xs md:text-sm font-semibold rounded-full transition-all duration-300 cursor-pointer"
             >
               Sign Up
             </Button>

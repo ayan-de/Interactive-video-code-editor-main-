@@ -7,7 +7,7 @@ export default function Footer() {
           href="https://github.com/ayan-de"
           target="_blank"
           rel="noopener noreferrer"
-          className="font-semibold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent hover:from-purple-500 hover:to-cyan-400 transition-colors"
+          className="font-semibold text-primary hover:text-primary/80 transition-colors"
         >
           Ayan
         </a>

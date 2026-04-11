@@ -29,8 +29,8 @@ export default function Home() {
       <header className="flex-grow flex items-center justify-center text-center px-4 py-50 md:px-6">
         <div className="mb-8 max-w-4xl flex flex-col gap-6">
           <div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
-              OpenScrim
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 leading-tight drop-shadow-lg">
+              Open<span className="text-primary">Scrim</span>
             </h1>
           </div>
 
@@ -42,7 +42,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mt-6 md:mt-8 px-4">
             <Button
               size="lg"
-              className="w-full sm:w-auto bg-white text-black hover:bg-gray-100 font-semibold px-6 sm:px-8 md:px-12 py-3 md:py-4 text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-12 md:h-14 cursor-pointer"
+              className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6 sm:px-8 md:px-12 py-3 md:py-4 text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-12 md:h-14 cursor-pointer"
               onClick={handleStartRecording}
             >
               Start Recording

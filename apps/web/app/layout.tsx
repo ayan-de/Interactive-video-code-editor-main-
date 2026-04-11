@@ -1,23 +1,24 @@
+// For adding custom fonts with other frameworks, see:
+// https://tailwindcss.com/docs/font-family
 import type { Metadata } from 'next';
-import localFont from 'next/font/local';
-import { Poppins } from 'next/font/google';
+import { Inter, Source_Serif_4, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import { UserProvider } from './context/UserContext';
 import { LoadingProvider } from './context/LoadingContext';
+import { UserProvider } from './context/UserContext';
 
-const poppins = Poppins({
+const fontSans = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-poppins',
+  variable: '--font-sans',
 });
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
+const fontSerif = Source_Serif_4({
+  subsets: ['latin'],
+  variable: '--font-serif',
 });
-const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
-  variable: '--font-geist-mono',
+
+const fontMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
 });
 
 export const metadata: Metadata = {
@@ -31,9 +32,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${poppins.variable} ${geistSans.variable} ${geistMono.variable}`}
+        className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}
       >
         <LoadingProvider>
           <UserProvider>{children}</UserProvider>
