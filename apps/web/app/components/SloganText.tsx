@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function SloganText() {
   return (
-    <div>
-      <div className="mb-6">
+    <div className="mb-6">
+      {/* <div>
         <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-gray-300 mb-2 drop-shadow-md px-2 inline-flex items-center justify-center">
           <span className="sr-only">Slogan:</span>
           <span className="relative inline-flex items-center">
@@ -103,7 +103,11 @@ export default function SloganText() {
             </span>
           </span>
         </p>
-      </div>
+      </div> */}
+
+      <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-gray-300 drop-shadow-md px-2">
+        &quot;Stop recording pixels, instead capture DOM&quot;
+      </p>
     </div>
   );
 }
