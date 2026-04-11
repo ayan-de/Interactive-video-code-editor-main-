@@ -2,22 +2,23 @@
 
 ## Goal
 
-Build a VS Code extension (`apps/vscode`) that records multi-file coding sessions inside VS Code and exports them as `.tantrica` files playable by the Tantrica web player. Initial scope: **core recording + export + sidebar webview UI**. No upload to backend (Phase 2.3 follow-up).
+Build a VS Code extension (`apps/vscode`) that records multi-file coding sessions inside VS Code and exports them as `.tantrica` files playable by the OpenScrim web player. Initial scope: **core recording + export + sidebar webview UI**. No upload to backend (Phase 2.3 follow-up).
 
 ## Scope
 
 | In scope                                         | Out of scope (follow-up)     |
 | ------------------------------------------------ | ---------------------------- |
-| Multi-file recording with tab switching          | Upload to Tantrica backend   |
+| Multi-file recording with tab switching          | Upload to OpenScrim backend  |
 | Sidebar webview panel (record/stop/pause/export) | Web player multi-file tab UI |
 | Status bar recording indicator                   | Voice-over / annotations     |
 | Export `.tantrica` via native save dialog        | Settings/configuration UI    |
-| `tantrica-core` type changes for multi-file      | Terminal capture             |
+| `openscrim-core` type changes for multi-file     | Terminal capture             |
+| `openscrim-core` API changes for extensibility   |                              |
 
 ## Decisions
 
 - **Multi-file approach**: Implicit file tracking via `FILE_SWITCH` events (Approach A)
-- **Location**: `apps/vscode` inside the monorepo, imports `@repo/tantrica-core`
+- **Location**: `apps/vscode` inside the monorepo, imports `@repo/openscrim-core`
 - **Bundler**: esbuild
 - **Webview**: Vanilla HTML/JS (no React in webview)
 - **Communication**: `postMessage` between extension host and webview
@@ -33,7 +34,7 @@ apps/vscode/
 │   │   ├── VSCodeRecordingManager.ts # Recording lifecycle orchestrator
 │   │   └── FileTracker.ts        # Tracks active files, emits FILE_SWITCH
 │   ├── export/
-│   │   └── TantricaExporter.ts   # Uses TantricaFileWriter from tantrica-core
+│   │   └── TantricaExporter.ts   # Uses writeTantricaBuffer from openscrim-core
 │   ├── sidebar/
 │   │   ├── SidebarProvider.ts    # WebviewViewProvider implementation
 │   │   └── webview/
@@ -48,12 +49,15 @@ apps/vscode/
 └── .vscodeignore
 ```
 
-## Type Changes to `@repo/tantrica-core`
+## Changes to `@repo/openscrim-core`
 
-### New event type
+> The core package is `@repo/openscrim-core` (packages/openscrim-core). All type and API
+> changes below must be made there **before** scaffolding the VS Code extension.
+
+### 1. New event type — `FILE_SWITCH`
 
 ```typescript
-// In RecordingEventType enum:
+// In RecordingEventType enum (types.ts):
 FILE_SWITCH = 'file_switch',
 
 // New interface:
@@ -62,13 +66,13 @@ export interface FileSwitchEvent extends BaseRecordingEvent {
   filePath: string;   // relative to workspace root (e.g. "src/index.ts")
   fileName: string;   // basename only (e.g. "index.ts")
   language: string;
-  content: string;
+  content: string;    // full snapshot of file content at switch time
 }
 
-// Add FileSwitchEvent to RecordingEvent union
+// Add FileSwitchEvent to RecordingEvent union type
 ```
 
-### RecordingSession additions
+### 2. Multi-file support on `RecordingSession`
 
 ```typescript
 export interface FileSnapshot {
@@ -78,7 +82,116 @@ export interface FileSnapshot {
 }
 
 // Add to RecordingSession:
-files: Record<string, FileSnapshot>;
+files: Record<string, FileSnapshot>; // keyed by relative filePath
+```
+
+### 3. Make `addEvent()` public on `RecordingManager`
+
+Currently `addEvent()` is **private**. The VS Code extension needs to feed arbitrary
+`RecordingEvent`s (created by `VSCodeEventCapture`) directly into the manager.
+
+**Change**: Rename `private addEvent` → `public addEvent`.
+
+```typescript
+// Before (RecordingManager.ts:258):
+private addEvent(event: RecordingEvent): void { ... }
+
+// After:
+public addEvent(event: RecordingEvent): void { ... }
+```
+
+### 4. Refactor `stopRecording()` signature
+
+Current signature is coupled to single-file web usage:
+
+```typescript
+stopRecording(
+  sessionTitle: string,
+  description: string,
+  finalContent: string,
+  initialContent: string
+): RecordingSession | null
+```
+
+**Change**: Accept a structured options object that supports both single-file and multi-file:
+
+```typescript
+export interface StopRecordingOptions {
+  title: string;
+  description?: string;
+  initialContent: string;
+  finalContent: string;
+  files?: Record<string, FileSnapshot>;  // multi-file support
+}
+
+// New signature:
+stopRecording(options: StopRecordingOptions): RecordingSession | null
+```
+
+The web app caller updates to: `manager.stopRecording({ title, description, initialContent, finalContent })`.
+
+### 5. Add state change observer to `RecordingManager`
+
+The extension sidebar needs to react to state transitions (idle → recording → paused → stopped).
+Currently there is no callback or event emitter.
+
+**Change**: Add an `onStateChange` callback slot:
+
+```typescript
+export type StateChangeCallback = (
+  newState: RecordingState,
+  previousState: RecordingState,
+  sessionState: RecordingSessionState
+) => void;
+
+// Add to RecordingManager:
+private stateChangeCallbacks: StateChangeCallback[] = [];
+
+onStateChange(cb: StateChangeCallback): void {
+  this.stateChangeCallbacks.push(cb);
+}
+
+// Emit in startRecording(), pauseRecording(), resumeRecording(), stopRecording():
+private emitStateChange(newState: RecordingState): void {
+  const prev = this.sessionState.state;
+  this.sessionState.state = newState;
+  for (const cb of this.stateChangeCallbacks) {
+    cb(newState, prev, { ...this.sessionState });
+  }
+}
+```
+
+### 6. Update `TantricaFile` format for multi-file
+
+Add `files` field to `TantricaFile` in `format.ts`:
+
+```typescript
+export interface TantricaFile {
+  version: 1;
+  metadata: { ... };
+  initialContent: string;
+  finalContent: string;
+  files?: Record<string, FileSnapshot>;  // multi-file — optional for backward compat
+  editorConfig: { ... };
+  events: RecordingEvent[];
+}
+```
+
+Update `sessionToTantricaFile()` to include `files` when present, and `tantricaFileToSession()`
+to restore it.
+
+### 7. Update `index.ts` exports
+
+Add new types to the public API:
+
+```typescript
+export type {
+  FileSwitchEvent,
+  FileSnapshot,
+  StopRecordingOptions,
+  StateChangeCallback,
+} from './types.js';
+export { RecordingManager } from './RecordingManager.js'; // already exported
 ```
 
 ### Backward compatibility
@@ -86,6 +199,8 @@ files: Record<string, FileSnapshot>;
 - Old recordings without `FILE_SWITCH` events and without `files` map continue to work
 - `initialContent`, `finalContent`, `language` fields remain as the "primary file"
 - Web player treats recordings without `FILE_SWITCH` as single-file (current behavior)
+- `TantricaFile.files` is optional — old `.tantrica` files without it parse correctly
+- `stopRecording()` old callers wrap args into `StopRecordingOptions` object (trivial migration)
 
 ## Event Capture
 
@@ -113,14 +228,15 @@ Maintains a `Map<filePath, {initialContent, language}>`:
 
 ### VSCodeRecordingManager
 
-Wraps the existing `RecordingManager` from `@repo/tantrica-core`:
+Wraps the existing `RecordingManager` from `@repo/openscrim-core`:
 
 - Owns `VSCodeEventCapture` and `FileTracker` instances
 - Manages VS Code event subscriptions (subscribe on start, dispose on stop)
 - On start: creates session, subscribes to events, captures initial file state
 - On pause: emits `RECORDING_PAUSE`, pauses event forwarding
 - On resume: emits `RECORDING_RESUME`, resumes event forwarding
-- On stop: emits `RECORDING_STOP`, captures final file states, builds complete session
+- On stop: calls `manager.stopRecording({ title, description, initialContent, finalContent, files })` with multi-file `files` map from `FileTracker`, unsubscribes from VS Code events
+- Listens to `manager.onStateChange()` to forward state updates to sidebar and status bar
 - Exposes the session for export
 
 ## Recording Flow
@@ -153,11 +269,12 @@ Wraps the existing `RecordingManager` from `@repo/tantrica-core`:
 5. User stops
    → VSCodeRecordingManager.stop()
    → Emit RECORDING_STOP
-   → Capture final content for all tracked files
+   → Capture final content for all tracked files (FileTracker.buildFileSnapshots())
    → Unsubscribe from VS Code events
+   → Call manager.stopRecording({ title, description, initialContent, finalContent, files })
    → Build complete RecordingSession
    → Status bar resets
-   → Sidebar shows summary + export button
+   → Sidebar shows summary + export button (via onStateChange callback)
 ```
 
 ## Sidebar Webview
@@ -228,9 +345,9 @@ Commands are also exposed in the sidebar webview and status bar.
 2. Extension calls `vscode.window.showSaveDialog({ filters: { 'Tantrica Recording': ['tantrica'] } })`
 3. User picks save location
 4. `TantricaExporter.export(session, filePath)`:
-   - Builds `TantricaFile` from `RecordingSession` (uses `files` map for multi-file)
-   - Calls `TantricaFileWriter.write(tantricaFile)` from `@repo/tantrica-core`
-   - Writes buffer to disk
+   - Builds `TantricaFile` from `RecordingSession` via `sessionToTantricaFile()` (includes `files` map for multi-file)
+   - Calls `writeTantricaBuffer(tantricaFile)` from `@repo/openscrim-core`
+   - Writes buffer to disk via `fs.writeFileSync`
 5. Success notification: `vscode.window.showInformationMessage`
 
 ## Build & Turbo Integration
@@ -251,16 +368,16 @@ Commands are also exposed in the sidebar webview and status bar.
 
 ### esbuild config
 
-Bundle all source into `dist/extension.js`. Webview assets (HTML/JS/CSS) are loaded at runtime via `context.asWebviewUri`. Externalize `vscode` module (not bundled). Bundle `@repo/tantrica-core` into the extension output.
+Bundle all source into `dist/extension.js`. Webview assets (HTML/JS/CSS) are loaded at runtime via `context.asWebviewUri`. Externalize `vscode` module (not bundled). Bundle `@repo/openscrim-core` into the extension output.
 
 ### Turbo
 
-Add `vscode` to `pnpm-workspace.yaml`. Add build pipeline entry in `turbo.json`:
+Add `vscode` to `pnpm-workspace.yaml` (already covered by `apps/*` glob). Add build pipeline entry in `turbo.json`:
 
 ```json
 {
   "vscode": {
-    "dependsOn": ["@repo/tantrica-core"]
+    "dependsOn": ["@repo/openscrim-core"]
   }
 }
 ```
@@ -334,7 +451,7 @@ Key fields:
     }
   },
   "dependencies": {
-    "@repo/tantrica-core": "workspace:*"
+    "@repo/openscrim-core": "workspace:*"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",
@@ -346,14 +463,34 @@ Key fields:
 
 ## Web Player Impact
 
-Multi-file `.tantrica` recordings need a small web player update to render file tabs. This is a follow-up task:
+Multi-file `.tantrica` recordings need a small web player update to render file tabs. This is a follow-up task **after** the extension is working:
 
 - Show file tabs above the Monaco editor
 - On `FILE_SWITCH` event, switch the active tab and update Monaco content
 - Each tab shows `fileName` from the event
 - `files` map in session provides initial content per file
+- `TantricaFile.files` is optional — when absent, treat as single-file (current behavior)
 
 Single-file recordings are unaffected — no changes needed for existing playback.
+
+## Pre-requisite Checklist
+
+Before writing any extension code in `apps/vscode`, these `openscrim-core` changes **must** land first:
+
+- [ ] Add `FILE_SWITCH` to `RecordingEventType` enum (`types.ts`)
+- [ ] Add `FileSwitchEvent` interface (`types.ts`)
+- [ ] Add `FileSwitchEvent` to `RecordingEvent` union (`types.ts`)
+- [ ] Add `FileSnapshot` interface (`types.ts`)
+- [ ] Add `files: Record<string, FileSnapshot>` to `RecordingSession` (`types.ts`)
+- [ ] Make `addEvent()` public on `RecordingManager` (`RecordingManager.ts`)
+- [ ] Refactor `stopRecording()` to accept `StopRecordingOptions` object (`RecordingManager.ts`)
+- [ ] Add `onStateChange()` observer to `RecordingManager` (`RecordingManager.ts`)
+- [ ] Add `files` field to `TantricaFile` interface (`format.ts`)
+- [ ] Update `sessionToTantricaFile()` to include `files` when present (`format.ts`)
+- [ ] Update `tantricaFileToSession()` to restore `files` (`format.ts`)
+- [ ] Export new types from `index.ts`
+- [ ] Update web app callers of `stopRecording()` to use new options object
+- [ ] Run `pnpm build` and `pnpm check-types` to verify no regressions
 
 ## Future (Out of Scope)
 
