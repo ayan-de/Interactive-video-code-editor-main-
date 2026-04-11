@@ -18,7 +18,7 @@ export default function PlaygroundCard({
 }: PlaygroundCardProps) {
   const cardContent = (
     <div
-      className={`group relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 hover:bg-white/15 hover:border-white/30 transition-all duration-300 cursor-pointer h-full ${className}`}
+      className={`group relative bg-white/10 backdrop-blur-sm border-2 border-primary rounded-lg p-6 hover:bg-white/15 hover:border-primary/70 transition-all duration-300 cursor-pointer h-full ${className}`}
     >
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
