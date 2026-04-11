@@ -25,12 +25,12 @@ export default function PlaygroundModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gray-900 border-gray-700 text-white">
+      <DialogContent className="bg-background border-border text-foreground">
         <DialogHeader>
-          <DialogTitle className="text-white">
+          <DialogTitle className="text-foreground">
             New Recording Session
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-muted-foreground">
             Enter a title for your recording session to get started.
           </DialogDescription>
         </DialogHeader>
@@ -41,19 +41,19 @@ export default function PlaygroundModal({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Session title..."
-            className="px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-input border border-border rounded-md text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
 
           <div className="flex justify-end gap-2">
             <Button
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="text-gray-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => {
                 const trimmed = title.trim();
                 if (!trimmed) return;
