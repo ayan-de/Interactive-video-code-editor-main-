@@ -70,7 +70,7 @@ export default function ViewPage() {
 
   if (selectedSession) {
     return (
-      <div className="fixed inset-0 bg-gray-900 z-50">
+      <div className="fixed inset-0 bg-background z-50">
         <PlaybackViewer
           session={selectedSession}
           onClose={handleClosePlayback}
@@ -81,21 +81,21 @@ export default function ViewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <div className="bg-card rounded-xl shadow-lg border border-border">
+        <div className="p-6 border-b border-border bg-primary/5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              <h2 className="text-xl font-semibold text-card-foreground mb-2">
                 Saved Recordings ({recordings.length})
               </h2>
-              <p className="text-gray-600 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Click on any recording to start playback with full interactive
                 controls
               </p>
             </div>
             {loading && (
-              <div className="flex items-center gap-2 text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                 <span className="text-sm">Loading...</span>
               </div>
             )}
@@ -105,19 +105,17 @@ export default function ViewPage() {
         <div className="p-6">
           {recordings.length === 0 && !loading ? (
             <div className="text-center py-16">
-              <div className="text-gray-400 text-8xl mb-6">&#127909;</div>
-              <h3 className="text-2xl font-medium text-gray-900 mb-3">
+              <h3 className="text-2xl font-medium text-card-foreground mb-3">
                 No recordings yet
               </h3>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Create your first recording to see it here. All recordings are
                 automatically saved and ready for playback.
               </p>
               <Link
                 href="/record"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
               >
-                <span>&#128249;</span>
                 Start Your First Recording
               </Link>
             </div>
@@ -126,11 +124,11 @@ export default function ViewPage() {
               {recordings.map((recording) => (
                 <div
                   key={recording.id}
-                  className="group border border-gray-200 rounded-xl p-6 hover:shadow-lg hover:border-indigo-300 transition-all duration-200 cursor-pointer bg-gradient-to-br from-white to-gray-50"
+                  className="group border border-border rounded-xl p-6 hover:shadow-lg hover:border-primary/50 transition-all duration-200 cursor-pointer bg-card"
                   onClick={() => handleRecordingSelect(recording)}
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="font-semibold text-gray-900 text-lg group-hover:text-indigo-600 transition-colors truncate pr-2">
+                    <h3 className="font-semibold text-card-foreground text-lg group-hover:text-primary transition-colors truncate pr-2">
                       {recording.title}
                     </h3>
                     <button
@@ -138,7 +136,7 @@ export default function ViewPage() {
                         e.stopPropagation();
                         handleDelete(recording.id);
                       }}
-                      className="text-red-400 hover:text-red-600 transition-colors p-1 rounded opacity-0 group-hover:opacity-100"
+                      className="text-destructive hover:text-destructive/80 transition-colors p-1 rounded opacity-0 group-hover:opacity-100"
                       title="Delete recording"
                     >
                       <svg
@@ -156,7 +154,7 @@ export default function ViewPage() {
                   </div>
 
                   {recording.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                       {recording.description}
                     </p>
                   )}
@@ -164,58 +162,62 @@ export default function ViewPage() {
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">&#9201;&#65039;</span>
                         <div>
-                          <div className="font-medium text-gray-700">
+                          <div className="font-medium text-card-foreground">
                             {formatDuration(recording.duration, 'short')}
                           </div>
-                          <div className="text-xs text-gray-500">Duration</div>
+                          <div className="text-xs text-muted-foreground">
+                            Duration
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">&#128202;</span>
                         <div>
-                          <div className="font-medium text-gray-700">
+                          <div className="font-medium text-card-foreground">
                             {recording.events?.length ?? 0}
                           </div>
-                          <div className="text-xs text-gray-500">Events</div>
+                          <div className="text-xs text-muted-foreground">
+                            Events
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">&#128295;</span>
                         <div>
-                          <div className="font-medium text-gray-700">
+                          <div className="font-medium text-card-foreground">
                             {recording.language}
                           </div>
-                          <div className="text-xs text-gray-500">Language</div>
+                          <div className="text-xs text-muted-foreground">
+                            Language
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">&#128197;</span>
                         <div>
-                          <div className="font-medium text-gray-700">
+                          <div className="font-medium text-card-foreground">
                             {recording.createdAt
                               ? new Date(
                                   recording.createdAt
                                 ).toLocaleDateString()
-                              : '—'}
+                              : '--'}
                           </div>
-                          <div className="text-xs text-gray-500">Created</div>
+                          <div className="text-xs text-muted-foreground">
+                            Created
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-gray-100">
+                  <div className="mt-6 pt-4 border-t border-border">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500 group-hover:text-indigo-600 transition-colors">
+                      <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
                         Click to play recording
                       </span>
-                      <div className="text-2xl group-hover:scale-110 transition-transform">
-                        &#9654;&#65039;
+                      <div className="text-2xl text-primary group-hover:scale-110 transition-transform">
+                        &#9654;
                       </div>
                     </div>
                   </div>
@@ -227,27 +229,31 @@ export default function ViewPage() {
       </div>
 
       {recordings.length > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-          <h3 className="font-semibold text-green-900 mb-4 flex items-center gap-2 text-lg">
-            &#127916; Playback Features
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+          <h3 className="font-semibold text-card-foreground mb-4 flex items-center gap-2 text-lg">
+            Playback Features
           </h3>
-          <div className="grid md:grid-cols-2 gap-6 text-sm text-green-800">
+          <div className="grid md:grid-cols-2 gap-6 text-sm text-muted-foreground">
             <div>
-              <h4 className="font-medium mb-2">Interactive Controls</h4>
+              <h4 className="font-medium mb-2 text-card-foreground">
+                Interactive Controls
+              </h4>
               <ul className="space-y-1">
-                <li>• Play, pause, and stop playback at any time</li>
-                <li>• Adjustable speed from 0.25x to 4x</li>
-                <li>• Timeline scrubber for instant navigation</li>
-                <li>• Real-time progress indicators</li>
+                <li>- Play, pause, and stop playback at any time</li>
+                <li>- Adjustable speed from 0.25x to 4x</li>
+                <li>- Timeline scrubber for instant navigation</li>
+                <li>- Real-time progress indicators</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Viewing Experience</h4>
+              <h4 className="font-medium mb-2 text-card-foreground">
+                Viewing Experience
+              </h4>
               <ul className="space-y-1">
-                <li>• Watch code appear exactly as typed</li>
-                <li>• See cursor movements and selections</li>
-                <li>• Perfect timing reproduction</li>
-                <li>• Syntax highlighting preserved</li>
+                <li>- Watch code appear exactly as typed</li>
+                <li>- See cursor movements and selections</li>
+                <li>- Perfect timing reproduction</li>
+                <li>- Syntax highlighting preserved</li>
               </ul>
             </div>
           </div>
