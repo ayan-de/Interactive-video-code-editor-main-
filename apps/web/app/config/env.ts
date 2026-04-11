@@ -1,5 +1,6 @@
 // Environment configuration helper
 // This file centralizes environment variable access and provides type safety
+/* eslint-disable turbo/no-undeclared-env-vars */
 
 export const env = {
   // Node environment

@@ -80,6 +80,80 @@ export function useRecording({
     setCurrentDuration(manager.getCurrentDuration());
   }, [getManager]);
 
+  const setupMonacoListeners = useCallback(
+    (
+      editor: monacoType.editor.IStandaloneCodeEditor,
+      monaco: typeof monacoType,
+      manager: RecordingManager
+    ) => {
+      if (!editor || !monaco || !manager) {
+        console.warn('Missing required dependencies for Monaco listeners');
+        return;
+      }
+
+      disposablesRef.current.forEach((d) => d?.dispose?.());
+      disposablesRef.current = [];
+
+      try {
+        const onDidChangeCursorPosition = editor.onDidChangeCursorPosition(
+          (e: monacoType.editor.ICursorPositionChangedEvent) => {
+            if (!manager.isRecording()) return;
+
+            const position: Position = {
+              lineNumber: e.position.lineNumber,
+              column: e.position.column,
+            };
+
+            manager.recordCursorPosition(position);
+          }
+        );
+
+        const onDidChangeCursorSelection = editor.onDidChangeCursorSelection(
+          (e: monacoType.editor.ICursorSelectionChangedEvent) => {
+            if (!manager.isRecording()) return;
+
+            const selection: Selection = {
+              selectionStartLineNumber: e.selection.selectionStartLineNumber,
+              selectionStartColumn: e.selection.selectionStartColumn,
+              positionLineNumber: e.selection.positionLineNumber,
+              positionColumn: e.selection.positionColumn,
+            };
+
+            manager.recordSelectionChange(selection);
+          }
+        );
+
+        const onKeyDown = editor.onKeyDown((e: monacoType.IKeyboardEvent) => {
+          if (!manager.isRecording()) return;
+
+          const position = editor.getPosition();
+          if (!position) return;
+
+          const pos: Position = {
+            lineNumber: position.lineNumber,
+            column: position.column,
+          };
+
+          manager.recordKeystroke(e.code || 'Unknown', pos, {
+            altKey: e.altKey,
+            ctrlKey: e.ctrlKey,
+            metaKey: e.metaKey,
+            shiftKey: e.shiftKey,
+          });
+        });
+
+        if (onDidChangeCursorPosition)
+          disposablesRef.current.push(onDidChangeCursorPosition);
+        if (onDidChangeCursorSelection)
+          disposablesRef.current.push(onDidChangeCursorSelection);
+        if (onKeyDown) disposablesRef.current.push(onKeyDown);
+      } catch (error) {
+        console.warn('Failed to set up some Monaco event listeners:', error);
+      }
+    },
+    []
+  );
+
   const startRecording = useCallback(
     (title: string = 'Untitled Session') => {
       try {
@@ -105,7 +179,7 @@ export function useRecording({
         onError?.(error as Error);
       }
     },
-    [updateSessionState, onError, getManager]
+    [updateSessionState, onError, getManager, setupMonacoListeners]
   );
 
   const pauseRecording = useCallback(() => {
@@ -242,81 +316,7 @@ export function useRecording({
         setupMonacoListeners(editor, monaco, manager);
       }
     },
-    [getManager]
-  );
-
-  const setupMonacoListeners = useCallback(
-    (
-      editor: monacoType.editor.IStandaloneCodeEditor,
-      monaco: typeof monacoType,
-      manager: RecordingManager
-    ) => {
-      if (!editor || !monaco || !manager) {
-        console.warn('Missing required dependencies for Monaco listeners');
-        return;
-      }
-
-      disposablesRef.current.forEach((d) => d?.dispose?.());
-      disposablesRef.current = [];
-
-      try {
-        const onDidChangeCursorPosition = editor.onDidChangeCursorPosition(
-          (e: monacoType.editor.ICursorPositionChangedEvent) => {
-            if (!manager.isRecording()) return;
-
-            const position: Position = {
-              lineNumber: e.position.lineNumber,
-              column: e.position.column,
-            };
-
-            manager.recordCursorPosition(position);
-          }
-        );
-
-        const onDidChangeCursorSelection = editor.onDidChangeCursorSelection(
-          (e: monacoType.editor.ICursorSelectionChangedEvent) => {
-            if (!manager.isRecording()) return;
-
-            const selection: Selection = {
-              selectionStartLineNumber: e.selection.selectionStartLineNumber,
-              selectionStartColumn: e.selection.selectionStartColumn,
-              positionLineNumber: e.selection.positionLineNumber,
-              positionColumn: e.selection.positionColumn,
-            };
-
-            manager.recordSelectionChange(selection);
-          }
-        );
-
-        const onKeyDown = editor.onKeyDown((e: monacoType.IKeyboardEvent) => {
-          if (!manager.isRecording()) return;
-
-          const position = editor.getPosition();
-          if (!position) return;
-
-          const pos: Position = {
-            lineNumber: position.lineNumber,
-            column: position.column,
-          };
-
-          manager.recordKeystroke(e.code || 'Unknown', pos, {
-            altKey: e.altKey,
-            ctrlKey: e.ctrlKey,
-            metaKey: e.metaKey,
-            shiftKey: e.shiftKey,
-          });
-        });
-
-        if (onDidChangeCursorPosition)
-          disposablesRef.current.push(onDidChangeCursorPosition);
-        if (onDidChangeCursorSelection)
-          disposablesRef.current.push(onDidChangeCursorSelection);
-        if (onKeyDown) disposablesRef.current.push(onKeyDown);
-      } catch (error) {
-        console.warn('Failed to set up some Monaco event listeners:', error);
-      }
-    },
-    []
+    [getManager, setupMonacoListeners]
   );
 
   useEffect(() => {

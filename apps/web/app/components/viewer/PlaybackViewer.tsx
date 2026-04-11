@@ -40,12 +40,14 @@ export default function PlaybackViewer({
   );
   const monacoRef = useRef<typeof monacoType | null>(null);
   const sessionRef = useRef<RecordingSession | null>(session);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlerRef = useRef<((data: any) => void) | null>(null);
 
   useEffect(() => {
     sessionRef.current = session;
   }, [session]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEventProcessed = useCallback((data: any) => {
     if (!editorRef.current || !monacoRef.current) return;
 
@@ -61,7 +63,7 @@ export default function PlaybackViewer({
         }
         break;
 
-      case 'contentChange':
+      case 'contentChange': {
         const contentEvent = data.event as ContentChangeEvent;
         const model = editor.getModel();
         if (model && contentEvent.changes) {
@@ -78,8 +80,9 @@ export default function PlaybackViewer({
           setEditorContent(model.getValue());
         }
         break;
+      }
 
-      case 'cursorPosition':
+      case 'cursorPosition': {
         const cursorEvent = data.event;
         if (cursorEvent.position) {
           editor.setPosition({
@@ -88,8 +91,9 @@ export default function PlaybackViewer({
           });
         }
         break;
+      }
 
-      case 'selectionChange':
+      case 'selectionChange': {
         const selectionEvent = data.event;
         if (selectionEvent.selection) {
           editor.setSelection({
@@ -100,8 +104,9 @@ export default function PlaybackViewer({
           });
         }
         break;
+      }
 
-      case 'languageChange':
+      case 'languageChange': {
         const langEvent = data.event;
         if (langEvent.language) {
           const model = editor.getModel();
@@ -110,6 +115,7 @@ export default function PlaybackViewer({
           }
         }
         break;
+      }
     }
   }, []);
 
@@ -366,6 +372,7 @@ export default function PlaybackViewer({
         </div>
       )}
 
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx>{`
         .timeline-slider::-webkit-slider-thumb {
           appearance: none;

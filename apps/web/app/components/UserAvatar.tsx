@@ -1,6 +1,7 @@
 'use client';
 
-import { User } from '../types/auth';
+import Image from 'next/image';
+import type { User } from '../types/auth';
 
 interface UserAvatarProps {
   user: User;
@@ -26,9 +27,11 @@ export default function UserAvatar({
   return (
     <div className={`${sizeClasses[size]} ${className}`}>
       {user.picture ? (
-        <img
+        <Image
           src={user.picture}
           alt={`${user.firstName} ${user.lastName}`}
+          width={32}
+          height={32}
           className="w-full h-full rounded-full object-cover border-2 border-white/20 cursor-pointer"
           referrerPolicy="no-referrer"
         />

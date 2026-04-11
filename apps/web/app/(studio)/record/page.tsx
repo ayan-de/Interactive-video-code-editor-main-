@@ -40,7 +40,8 @@ function RecordPageContent() {
             <li className="flex gap-2">
               <span className="font-medium">2.</span>
               <span>
-                Click <strong>"Start Recording"</strong> to begin capturing
+                Click <strong>&quot;Start Recording&quot;</strong> to begin
+                capturing
               </span>
             </li>
             <li className="flex gap-2">
@@ -52,15 +53,15 @@ function RecordPageContent() {
             <li className="flex gap-2">
               <span className="font-medium">4.</span>
               <span>
-                Use <strong>"Pause"</strong> and <strong>"Resume"</strong> for
-                breaks
+                Use <strong>&quot;Pause&quot;</strong> and{' '}
+                <strong>&quot;Resume&quot;</strong> for breaks
               </span>
             </li>
             <li className="flex gap-2">
               <span className="font-medium">5.</span>
               <span>
-                Click <strong>"Stop"</strong> to finish and auto-save your
-                session
+                Click <strong>&quot;Stop&quot;</strong> to finish and auto-save
+                your session
               </span>
             </li>
           </ol>

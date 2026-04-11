@@ -65,7 +65,10 @@ export default function MonacoEditor({
     },
   });
 
-  const handleEditorChange = (newValue: string | undefined, event: any) => {
+  const handleEditorChange = (
+    newValue: string | undefined,
+    event: monacoType.editor.IModelContentChangedEvent
+  ) => {
     setValue(newValue || '');
     recordingHandleEditorChange(newValue, event);
   };

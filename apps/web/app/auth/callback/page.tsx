@@ -41,7 +41,7 @@ function CallbackContent() {
           setTimeout(() => {
             window.location.href = '/';
           }, 1500);
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error('Failed to fetch user profile:', err);
           showError('Failed to process authentication data');
           setTimeout(() => router.push('/'), 3000);
