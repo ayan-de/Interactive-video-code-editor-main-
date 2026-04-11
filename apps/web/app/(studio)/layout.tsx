@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { FaCircle, FaPlay } from 'react-icons/fa';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useRecordingCount } from '@/hooks/useRecordingCount';
@@ -42,6 +43,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
+              <FaCircle className="text-xs" />
               Record
             </Link>
             <Link
@@ -52,6 +54,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
+              <FaPlay className="text-xs" />
               View {recordingCount > 0 && `(${recordingCount})`}
             </Link>
           </div>
