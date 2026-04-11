@@ -3,13 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
 import type * as monacoType from 'monaco-editor';
-import { PlaybackEngine, PlaybackState } from '@repo/tantrica-core';
+import { PlaybackEngine, PlaybackState } from '@repo/openscrim-core';
 import type {
   PlaybackPosition,
   PlaybackEventHandler,
   RecordingSession,
   ContentChangeEvent,
-} from '@repo/tantrica-core';
+} from '@repo/openscrim-core';
 import { formatDuration } from '@/lib/formatDuration';
 
 interface PlaybackViewerProps {

@@ -1,4 +1,4 @@
-import type { RecordingSession, RecordingEvent } from '@repo/tantrica-core';
+import type { RecordingSession, RecordingEvent } from '@repo/openscrim-core';
 
 export interface RecordingListResult {
   recordings: RecordingSession[];

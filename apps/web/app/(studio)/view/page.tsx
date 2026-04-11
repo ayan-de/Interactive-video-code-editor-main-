@@ -7,7 +7,7 @@ import { useLoading } from '@/context/LoadingContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getRecordingStorage } from '@/lib/storage';
 import { formatDuration } from '@/lib/formatDuration';
-import type { RecordingSession } from '@repo/tantrica-core';
+import type { RecordingSession } from '@repo/openscrim-core';
 
 export default function ViewPage() {
   const { showError } = useLoading();

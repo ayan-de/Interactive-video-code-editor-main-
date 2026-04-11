@@ -19,8 +19,8 @@ import { RecordingsService } from './recordings.service';
 import { CreateRecordingDto } from './dto/create-recording.dto';
 import { UpdateRecordingDto } from './dto/update-recording.dto';
 import { SessionAuthGuard } from '../common/guards/session-auth.guard';
-import { readTantricaBuffer, writeTantricaBuffer } from '@repo/tantrica-core';
-import type { TantricaFile } from '@repo/tantrica-core';
+import { readTantricaBuffer, writeTantricaBuffer } from '@repo/openscrim-core';
+import type { TantricaFile } from '@repo/openscrim-core';
 
 @Controller('recordings')
 export class RecordingsController {

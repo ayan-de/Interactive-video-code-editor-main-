@@ -1,12 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { RecordingManager, RecordingState } from '@repo/tantrica-core';
+import { RecordingManager, RecordingState } from '@repo/openscrim-core';
 import type {
   RecordingSessionState,
   RecordingSession,
   Position,
   Selection,
   Range,
-} from '@repo/tantrica-core';
+} from '@repo/openscrim-core';
 import type * as monacoType from 'monaco-editor';
 import { formatDuration } from '@/lib/formatDuration';
 

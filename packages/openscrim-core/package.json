@@ -1,5 +1,5 @@
 {
-  "name": "@repo/tantrica-core",
+  "name": "@repo/openscrim-core",
   "version": "0.0.0",
   "private": true,
   "main": "./dist/index.js",

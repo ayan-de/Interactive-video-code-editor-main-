@@ -17,7 +17,7 @@ apps/
   vscode/       → VS Code extension (Phase 2, not yet built)
 packages/
   ui/           → Shared React component library (@repo/ui)
-  tantrica-core/→ Shared recording engine (types, RecordingManager, PlaybackEngine, compression, .tantrica format)
+  openscrim-core/→ Shared recording engine (types, RecordingManager, PlaybackEngine, compression, .tantrica format)
   eslint-config/→ Shared ESLint flat configs
   typescript-config/ → Shared tsconfig bases
 ```
@@ -47,7 +47,7 @@ packages/
 
 ## Architecture Rules
 
-### Core Engine (`packages/tantrica-core`)
+### Core Engine (`packages/openscrim-core`)
 
 - **Strategy Pattern** for event capture: `MonacoEventCapture` (web) vs `VSCodeEventCapture` (extension). `RecordingManager` is agnostic to event source.
 - **Observer Pattern** for playback: `PlaybackEngine` emits events, UI components subscribe.
@@ -104,7 +104,7 @@ Single quotes. Semicolons always. Trailing commas: ES5. Print width: 80. Tab wid
 ### Imports
 
 - Web app: `@/*` maps to `./app/*` (e.g., `import { env } from '@/config/env'`)
-- Shared: `@repo/ui`, `@repo/tantrica-core`, `@repo/eslint-config/*`, `@repo/typescript-config/*`
+- Shared: `@repo/ui`, `@repo/openscrim-core`, `@repo/eslint-config/*`, `@repo/typescript-config/*`
 - API: relative imports (NestJS convention)
 - Group: framework/external first, then internal packages, then local aliases. Blank line between groups.
 
@@ -162,10 +162,10 @@ Single quotes. Semicolons always. Trailing commas: ES5. Print width: 80. Tab wid
 | ----- | ----------- | ------------------------------------------- |
 | 1.1   | Done        | Bug fixes                                   |
 | 1.2   | Done        | MongoDB backend, recording CRUD API         |
-| 1.3   | In Progress | `packages/tantrica-core` shared package     |
+| 1.3   | In Progress | `packages/openscrim-core` shared package    |
 | 1.4   | Pending     | New web pages (/r/:id, /dashboard, /upload) |
 | 1.5   | Pending     | Storage adapter pattern                     |
-| 2     | Blocked     | VS Code extension (needs tantrica-core)     |
+| 2     | Blocked     | VS Code extension (needs openscrim-core)    |
 | 3     | Blocked     | Interactive playback, fork, annotations     |
 
 ### Completed Fixes (P0/P1/P2 from Architecture Review)
