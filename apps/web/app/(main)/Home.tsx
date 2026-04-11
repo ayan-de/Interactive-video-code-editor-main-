@@ -30,7 +30,7 @@ export default function Home() {
         <div className="mb-8 max-w-4xl flex flex-col gap-6">
           <div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
-              Interactive Video Code Editor
+              OpenScrim
             </h1>
           </div>
 

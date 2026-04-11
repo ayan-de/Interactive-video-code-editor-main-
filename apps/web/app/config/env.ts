@@ -6,7 +6,7 @@ export const env = {
   NODE_ENV: process.env.NODE_ENV as 'development' | 'production' | 'test',
 
   // App configuration
-  APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Interactive Video Code Editor',
+  APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'OpenScrim',
   APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
 
   // Recording configuration

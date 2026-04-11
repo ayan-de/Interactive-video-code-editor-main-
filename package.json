@@ -1,5 +1,5 @@
 {
-  "name": "Interactive-video-code-editor",
+  "name": "openscrim",
   "private": true,
   "scripts": {
     "build": "turbo run build",

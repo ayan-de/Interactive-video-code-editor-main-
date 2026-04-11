@@ -1,4 +1,4 @@
-# AGENTS.md — Interactive Video Code Editor
+# AGENTS.md — OpenScrim
 
 This file provides guidance for agentic coding agents working in this repository.
 
