@@ -15,6 +15,7 @@ import type { Fork, ViewerMode } from '@/lib/forkTypes';
 import {
   createFork,
   getForks,
+  getFork,
   updateForkEdits,
   deleteFork as deleteForkFromStorage,
 } from '@/lib/forkStorage';
@@ -358,16 +359,19 @@ export default function PlaybackViewer({
       engine.pause();
     }
 
+    const latestFork = await getFork(fork.id);
+    if (!latestFork) return;
+
     editorRef.current?.updateOptions({ readOnly: false });
-    setActiveForkId(fork.id);
-    activeForkIdRef.current = fork.id;
+    setActiveForkId(latestFork.id);
+    activeForkIdRef.current = latestFork.id;
     setMode('fork');
-    setEditorContent(fork.edits);
+    setEditorContent(latestFork.edits);
 
     if (editorRef.current) {
       editorRef.current.setPosition({
-        lineNumber: fork.cursor.lineNumber,
-        column: fork.cursor.column,
+        lineNumber: latestFork.cursor.lineNumber,
+        column: latestFork.cursor.column,
       });
     }
   };
