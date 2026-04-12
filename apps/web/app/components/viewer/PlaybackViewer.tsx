@@ -47,6 +47,8 @@ export default function PlaybackViewer({
   const [forks, setForks] = useState<Fork[]>([]);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeForkIdRef = useRef<string | null>(null);
+  const [showForkList, setShowForkList] = useState<boolean>(false);
+  const forkListRef = useRef<HTMLDivElement>(null);
 
   const engineRef = useRef<PlaybackEngine | null>(null);
   const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(
@@ -193,6 +195,20 @@ export default function PlaybackViewer({
     setMode('playback');
     setActiveForkId(null);
   }, [session]);
+
+  useEffect(() => {
+    if (!showForkList) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        forkListRef.current &&
+        !forkListRef.current.contains(e.target as Node)
+      ) {
+        setShowForkList(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showForkList]);
 
   const handleEditorMount = (
     editor: monacoType.editor.IStandaloneCodeEditor,
@@ -500,6 +516,61 @@ export default function PlaybackViewer({
                 {forks.length} fork{forks.length !== 1 ? 's' : ''}
               </span>
             )}
+            <div className="relative" ref={forkListRef}>
+              {forks.length > 0 && (
+                <button
+                  onClick={() => setShowForkList(!showForkList)}
+                  disabled={mode === 'fork'}
+                  className="text-xs text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                >
+                  {showForkList ? 'Hide' : 'List'}
+                </button>
+              )}
+              {showForkList && (
+                <div className="absolute top-full mt-2 right-0 w-72 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+                  {forks.length === 0 ? (
+                    <div className="p-4 text-sm text-gray-400 text-center">
+                      No forks yet — click Fork to start editing
+                    </div>
+                  ) : (
+                    forks.map((fork, idx) => (
+                      <div
+                        key={fork.id}
+                        className="flex items-center justify-between px-3 py-2 hover:bg-gray-700 border-b border-gray-700 last:border-b-0"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                          <span className="text-sm text-white truncate">
+                            Fork #{idx + 1}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {formatTime(fork.timestamp)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => {
+                              handleOpenFork(fork);
+                              setShowForkList(false);
+                            }}
+                            disabled={mode === 'fork'}
+                            className="px-2 py-0.5 text-xs bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-50"
+                          >
+                            Open
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFork(fork.id)}
+                            className="px-2 py-0.5 text-xs bg-red-600 hover:bg-red-700 rounded"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

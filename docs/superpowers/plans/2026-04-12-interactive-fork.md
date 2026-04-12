@@ -617,7 +617,7 @@ Expected: PASS
 
 - Modify: `apps/web/app/components/viewer/PlaybackViewer.tsx`
 
-- [ ] **Step 1: Add showForkList state and toggle handler**
+- [x] **Step 1: Add showForkList state and toggle handler**
 
 Add this state alongside the other fork state variables:
 
@@ -644,7 +644,7 @@ useEffect(() => {
 }, [showForkList]);
 ```
 
-- [ ] **Step 2: Add fork list dropdown UI**
+- [x] **Step 2: Add fork list dropdown UI**
 
 In the playback controls, after the fork count span (`{forks.length > 0 && ...}`), add:
 
@@ -709,21 +709,12 @@ In the playback controls, after the fork count span (`{forks.length > 0 && ...}`
 </div>;
 ```
 
-- [ ] **Step 3: Verify compilation**
+- [x] **Step 3: Verify compilation**
 
 Run: `pnpm exec turbo check-types --filter=web`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
-
-```bash
-git add apps/web/app/components/viewer/PlaybackViewer.tsx
-git commit -m "feat(fork): add fork list dropdown with open/delete actions"
-```
-
----
-
-### Task 7: Final Polish + Lint + Type-Check
+- [x] **Step 4: Commit**
 
 **Files:**
 
