@@ -26,7 +26,7 @@
 
 - Create: `apps/web/app/lib/forkTypes.ts`
 
-- [ ] **Step 1: Create the fork types file**
+- [x] **Step 1: Create the fork types file**
 
 ```typescript
 export type ViewerMode = 'playback' | 'fork';
@@ -47,12 +47,12 @@ export interface Fork {
 }
 ```
 
-- [ ] **Step 2: Verify the file compiles**
+- [x] **Step 2: Verify the file compiles**
 
 Run: `pnpm exec turbo check-types --filter=web`
 Expected: PASS (no new errors)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/app/lib/forkTypes.ts
@@ -67,7 +67,7 @@ git commit -m "feat(fork): add Fork type and ViewerMode type"
 
 - Create: `apps/web/app/lib/forkStorage.ts`
 
-- [ ] **Step 1: Create the fork storage module**
+- [x] **Step 1: Create the fork storage module**
 
 ```typescript
 import { v4 as uuidv4 } from 'uuid';
@@ -208,12 +208,12 @@ export async function createFork(params: {
 }
 ```
 
-- [ ] **Step 2: Verify the file compiles**
+- [x] **Step 2: Verify the file compiles**
 
 Run: `pnpm exec turbo check-types --filter=web`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/web/app/lib/forkStorage.ts
