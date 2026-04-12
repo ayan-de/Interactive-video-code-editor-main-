@@ -720,28 +720,25 @@ Expected: PASS
 
 - Modify: `apps/web/app/components/viewer/PlaybackViewer.tsx` (cleanup)
 
-- [ ] **Step 1: Run lint and fix any issues**
+- [x] **Step 1: Run lint and fix any issues**
 
 Run: `pnpm exec turbo lint --filter=web`
 Expected: PASS (no warnings treated as errors)
 
 If lint fails, fix the reported issues.
 
-- [ ] **Step 2: Run type-check**
+- [x] **Step 2: Run type-check**
 
 Run: `pnpm exec turbo check-types --filter=web`
 Expected: PASS
 
-- [ ] **Step 3: Run format**
+- [x] **Step 3: Run format**
 
 Run: `pnpm format`
 
-- [ ] **Step 4: Commit any formatting/lint fixes**
+- [x] **Step 4: Commit any formatting/lint fixes**
 
-```bash
-git add -A
-git commit -m "chore(fork): lint and format fixes"
-```
+N/A — lint, type-check, and format all passed with no changes needed.
 
 ---
 
