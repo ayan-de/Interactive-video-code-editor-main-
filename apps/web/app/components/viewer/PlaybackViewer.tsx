@@ -10,6 +10,14 @@ import type {
   RecordingSession,
   ContentChangeEvent,
 } from '@repo/openscrim-core';
+import { GitBranch } from 'lucide-react';
+import type { Fork, ViewerMode } from '@/lib/forkTypes';
+import {
+  createFork,
+  getForks,
+  updateForkEdits,
+  deleteFork as deleteForkFromStorage,
+} from '@/lib/forkStorage';
 import { formatDuration } from '@/lib/formatDuration';
 
 interface PlaybackViewerProps {
@@ -34,6 +42,12 @@ export default function PlaybackViewer({
   const [editorContent, setEditorContent] = useState<string>('');
   const [isReady, setIsReady] = useState<boolean>(false);
 
+  const [mode, setMode] = useState<ViewerMode>('playback');
+  const [activeForkId, setActiveForkId] = useState<string | null>(null);
+  const [forks, setForks] = useState<Fork[]>([]);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeForkIdRef = useRef<string | null>(null);
+
   const engineRef = useRef<PlaybackEngine | null>(null);
   const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(
     null
@@ -45,7 +59,8 @@ export default function PlaybackViewer({
 
   useEffect(() => {
     sessionRef.current = session;
-  }, [session]);
+    activeForkIdRef.current = activeForkId;
+  }, [session, activeForkId]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEventProcessed = useCallback((data: any) => {
@@ -169,6 +184,16 @@ export default function PlaybackViewer({
     }
   }, [session]);
 
+  useEffect(() => {
+    if (session) {
+      getForks(session.id).then(setForks).catch(console.error);
+    } else {
+      setForks([]);
+    }
+    setMode('playback');
+    setActiveForkId(null);
+  }, [session]);
+
   const handleEditorMount = (
     editor: monacoType.editor.IStandaloneCodeEditor,
     monaco: typeof monacoType
@@ -203,6 +228,147 @@ export default function PlaybackViewer({
     const progress = parseFloat(e.target.value);
     const timeMs = (progress * position.totalTime) / 100;
     handleSeek(timeMs);
+  };
+
+  const handleCreateFork = async () => {
+    if (!session || !editorRef.current || mode === 'fork') return;
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    engine.pause();
+
+    const pos = engine.getPosition();
+    const editor = editorRef.current;
+    const cursorPos = editor.getPosition();
+    const content = editor.getModel()?.getValue() ?? session.initialContent;
+
+    try {
+      const fork = await createFork({
+        recordingId: session.id,
+        timestamp: pos.currentTime,
+        content,
+        language: session.language,
+        cursor: cursorPos
+          ? { lineNumber: cursorPos.lineNumber, column: cursorPos.column }
+          : { lineNumber: 1, column: 1 },
+      });
+
+      setForks((prev) =>
+        [...prev, fork].sort((a, b) => a.timestamp - b.timestamp)
+      );
+      setActiveForkId(fork.id);
+      activeForkIdRef.current = fork.id;
+      setMode('fork');
+      setEditorContent(content);
+
+      editor.updateOptions({ readOnly: false });
+    } catch (error) {
+      console.error('Failed to create fork:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (mode !== 'fork' || !activeForkId || !editorRef.current) return;
+
+    const editor = editorRef.current;
+    const disposable = editor.onDidChangeModelContent(() => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+      autoSaveTimerRef.current = setTimeout(() => {
+        const currentForkId = activeForkIdRef.current;
+        if (!currentForkId || !editorRef.current) return;
+        const model = editorRef.current.getModel();
+        if (!model) return;
+        const cursorPos = editorRef.current.getPosition();
+        updateForkEdits(
+          currentForkId,
+          model.getValue(),
+          cursorPos
+            ? { lineNumber: cursorPos.lineNumber, column: cursorPos.column }
+            : { lineNumber: 1, column: 1 }
+        ).catch(console.error);
+      }, 2000);
+    });
+
+    return () => {
+      disposable.dispose();
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [mode, activeForkId]);
+
+  const handleReturnToPlayback = async () => {
+    const forkId = activeForkIdRef.current;
+    if (forkId && editorRef.current) {
+      const model = editorRef.current.getModel();
+      const cursorPos = editorRef.current.getPosition();
+      if (model) {
+        try {
+          await updateForkEdits(
+            forkId,
+            model.getValue(),
+            cursorPos
+              ? { lineNumber: cursorPos.lineNumber, column: cursorPos.column }
+              : { lineNumber: 1, column: 1 }
+          );
+        } catch (error) {
+          console.error('Failed to save fork edits:', error);
+        }
+      }
+    }
+
+    editorRef.current?.updateOptions({ readOnly: true });
+    setMode('playback');
+    setActiveForkId(null);
+    activeForkIdRef.current = null;
+
+    const engine = engineRef.current;
+    if (engine && session) {
+      const fork = forks.find((f) => f.id === forkId);
+      if (fork) {
+        engine.seek(fork.timestamp);
+      }
+      engine.play();
+    }
+  };
+
+  const handleOpenFork = async (fork: Fork) => {
+    if (mode === 'fork') return;
+
+    const engine = engineRef.current;
+    if (engine) {
+      engine.pause();
+    }
+
+    editorRef.current?.updateOptions({ readOnly: false });
+    setActiveForkId(fork.id);
+    activeForkIdRef.current = fork.id;
+    setMode('fork');
+    setEditorContent(fork.edits);
+
+    if (editorRef.current) {
+      editorRef.current.setPosition({
+        lineNumber: fork.cursor.lineNumber,
+        column: fork.cursor.column,
+      });
+    }
+  };
+
+  const handleDeleteFork = async (forkId: string) => {
+    try {
+      await deleteForkFromStorage(forkId);
+      setForks((prev) => prev.filter((f) => f.id !== forkId));
+      if (activeForkId === forkId) {
+        editorRef.current?.updateOptions({ readOnly: true });
+        setMode('playback');
+        setActiveForkId(null);
+        activeForkIdRef.current = null;
+      }
+    } catch (error) {
+      console.error('Failed to delete fork:', error);
+    }
   };
 
   const formatTime = (ms: number): string => {

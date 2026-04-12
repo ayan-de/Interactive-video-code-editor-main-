@@ -230,7 +230,7 @@ git commit -m "feat(fork): add IndexedDB fork storage with CRUD and auto-limit"
 
 This task adds the fork state variables, loads forks on session load, and adds the Fork button to the controls bar.
 
-- [ ] **Step 1: Add imports and fork state to PlaybackViewer**
+- [x] **Step 1: Add imports and fork state to PlaybackViewer**
 
 Add these imports at the top of the file (after existing imports):
 
@@ -261,7 +261,7 @@ Add this ref assignment after the existing `sessionRef.current = session;`:
 activeForkIdRef.current = activeForkId;
 ```
 
-- [ ] **Step 2: Add fork loading effect and mode reset on session change**
+- [x] **Step 2: Add fork loading effect and mode reset on session change**
 
 Add this effect after the existing session-loading `useEffect` (the one with `[session]` dependency):
 
@@ -277,7 +277,7 @@ useEffect(() => {
 }, [session]);
 ```
 
-- [ ] **Step 3: Add fork creation handler**
+- [x] **Step 3: Add fork creation handler**
 
 Add this handler after `handleTimelineChange`:
 
@@ -320,7 +320,7 @@ const handleCreateFork = async () => {
 };
 ```
 
-- [ ] **Step 4: Add auto-save effect for fork edits**
+- [x] **Step 4: Add auto-save effect for fork edits**
 
 Add this effect after `handleCreateFork`:
 
@@ -358,7 +358,7 @@ useEffect(() => {
 }, [mode, activeForkId]);
 ```
 
-- [ ] **Step 5: Add return-to-playback handler**
+- [x] **Step 5: Add return-to-playback handler**
 
 Add this handler after the auto-save effect:
 
@@ -399,7 +399,7 @@ const handleReturnToPlayback = async () => {
 };
 ```
 
-- [ ] **Step 6: Add re-enter existing fork handler**
+- [x] **Step 6: Add re-enter existing fork handler**
 
 ```typescript
 const handleOpenFork = async (fork: Fork) => {
@@ -425,7 +425,7 @@ const handleOpenFork = async (fork: Fork) => {
 };
 ```
 
-- [ ] **Step 7: Add delete fork handler**
+- [x] **Step 7: Add delete fork handler**
 
 ```typescript
 const handleDeleteFork = async (forkId: string) => {
@@ -444,12 +444,12 @@ const handleDeleteFork = async (forkId: string) => {
 };
 ```
 
-- [ ] **Step 8: Verify the file compiles**
+- [x] **Step 8: Verify the file compiles**
 
 Run: `pnpm exec turbo check-types --filter=web`
 Expected: PASS (we haven't wired the handlers to the UI yet, but the logic should compile)
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add apps/web/app/components/viewer/PlaybackViewer.tsx
