@@ -3,12 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { FaClock, FaBolt, FaCode, FaCalendar } from 'react-icons/fa';
+import { HiOutlineDownload } from 'react-icons/hi';
 import PlaybackViewer from '../../components/viewer/PlaybackViewer';
 import { useLoading } from '@/context/LoadingContext';
 import { useAuth } from '@/hooks/useAuth';
 import { getRecordingStorage } from '@/lib/storage';
 import { formatDuration } from '@/lib/formatDuration';
+import { downloadRecording } from '@/lib/recordingsApi';
 import type { RecordingSession } from '@repo/openscrim-core';
+import { sessionToTantricaFile } from '@repo/openscrim-core';
 
 export default function ViewPage() {
   const { showError } = useLoading();
@@ -65,6 +68,38 @@ export default function ViewPage() {
       const message =
         err instanceof Error ? err.message : 'Failed to delete recording';
       console.error('Error deleting recording:', err);
+      showError(message);
+    }
+  };
+
+  const handleDownload = async (
+    e: React.MouseEvent,
+    recording: RecordingSession
+  ) => {
+    e.stopPropagation();
+    try {
+      const filename = `${recording.title || 'recording'}.tantrica`;
+      if (isAuthenticated) {
+        await downloadRecording(recording.id, filename);
+        return;
+      }
+      const storage = getRecordingStorage(() => isAuthenticated);
+      const events = await storage.getEvents(recording.id);
+      const session = { ...recording, events };
+      const file = sessionToTantricaFile(session);
+      const jsonStr = JSON.stringify(file);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to download recording';
       showError(message);
     }
   };
@@ -151,6 +186,13 @@ export default function ViewPage() {
                           clipRule="evenodd"
                         />
                       </svg>
+                    </button>
+                    <button
+                      onClick={(e) => handleDownload(e, recording)}
+                      className="text-muted-foreground hover:text-primary transition-colors p-1 rounded opacity-0 group-hover:opacity-100"
+                      title="Download recording"
+                    >
+                      <HiOutlineDownload className="w-4 h-4" />
                     </button>
                   </div>
 

@@ -158,6 +158,32 @@ export async function incrementPlayCount(id: string): Promise<void> {
   await post(`/recordings/${id}/play`);
 }
 
+export async function downloadRecording(
+  id: string,
+  filename: string
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/recordings/${id}/download`, {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(
+      body.message || `Download failed with status ${response.status}`
+    );
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export function convertApiRecordingToSession(
   recording: RecordingFromApi,
   events: RecordingEventPayload[]
