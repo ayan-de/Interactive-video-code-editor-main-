@@ -464,7 +464,7 @@ git commit -m "feat(fork): add fork state, handlers, and auto-save logic"
 
 - Modify: `apps/web/app/components/viewer/PlaybackViewer.tsx`
 
-- [ ] **Step 1: Add the Fork button to playback controls**
+- [x] **Step 1: Add the Fork button to playback controls**
 
 In the JSX, inside the controls `<div className="flex items-center gap-4 mb-4">`, after the state indicator `</div>` (the one with `playbackState.toUpperCase()`), add the Fork button:
 
@@ -490,7 +490,7 @@ In the JSX, inside the controls `<div className="flex items-center gap-4 mb-4">`
 </div>;
 ```
 
-- [ ] **Step 2: Add the Return-to-Playback banner**
+- [x] **Step 2: Add the Return-to-Playback banner**
 
 In the JSX, between the `{/* Editor */}` comment and the `<div className="flex-1 relative">`, add the fork mode banner:
 
@@ -519,7 +519,7 @@ In the JSX, between the `{/* Editor */}` comment and the `<div className="flex-1
 }
 ```
 
-- [ ] **Step 3: Disable playback controls in fork mode**
+- [x] **Step 3: Disable playback controls in fork mode**
 
 Update the play/pause button's `disabled` prop — change `disabled={!isReady}` to `disabled={!isReady || mode === 'fork'}` on both the play/pause button and the stop button.
 
@@ -529,7 +529,7 @@ Update the timeline scrubber's `disabled` prop — change `disabled={!isReady}` 
 
 Update the Fork button's `disabled` prop — it should remain `disabled={!isReady || mode === 'fork'}`.
 
-- [ ] **Step 4: Update the Editor readOnly option for fork mode**
+- [x] **Step 4: Update the Editor readOnly option for fork mode**
 
 In the `<Editor>` component's `options` prop, change:
 
@@ -553,21 +553,12 @@ Wrap the existing `<Editor>` with:
 </div>
 ```
 
-- [ ] **Step 5: Verify the file compiles and renders**
+- [x] **Step 5: Verify the file compiles and renders**
 
 Run: `pnpm exec turbo check-types --filter=web`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
-
-```bash
-git add apps/web/app/components/viewer/PlaybackViewer.tsx
-git commit -m "feat(fork): add Fork button and Return-to-Playback banner UI"
-```
-
----
-
-### Task 5: Timeline Fork Markers (Red Dots)
+- [x] **Step 6: Commit**
 
 **Files:**
 

@@ -423,7 +423,7 @@ export default function PlaybackViewer({
               <button
                 onClick={handlePause}
                 className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
-                disabled={!isReady}
+                disabled={!isReady || mode === 'fork'}
               >
                 <span className="text-lg">⏸️</span>
               </button>
@@ -431,7 +431,7 @@ export default function PlaybackViewer({
               <button
                 onClick={handlePlay}
                 className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
-                disabled={!isReady}
+                disabled={!isReady || mode === 'fork'}
               >
                 <span className="text-lg">▶️</span>
               </button>
@@ -440,7 +440,7 @@ export default function PlaybackViewer({
             <button
               onClick={handleStop}
               className="w-10 h-10 bg-gray-600 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors"
-              disabled={!isReady}
+              disabled={!isReady || mode === 'fork'}
             >
               <span className="text-lg">⏹️</span>
             </button>
@@ -453,7 +453,7 @@ export default function PlaybackViewer({
               value={speed}
               onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
               className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm"
-              disabled={!isReady}
+              disabled={!isReady || mode === 'fork'}
             >
               {speedOptions.map((option) => (
                 <option key={option} value={option}>
@@ -483,6 +483,24 @@ export default function PlaybackViewer({
               {playbackState.toUpperCase()}
             </span>
           </div>
+
+          {/* Fork button */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCreateFork}
+              disabled={!isReady || mode === 'fork'}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm transition-colors"
+              title="Pause and edit code at this point"
+            >
+              <GitBranch size={14} />
+              <span>Fork</span>
+            </button>
+            {forks.length > 0 && (
+              <span className="text-xs text-gray-400">
+                {forks.length} fork{forks.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Timeline scrubber */}
@@ -495,32 +513,59 @@ export default function PlaybackViewer({
             value={position.progress * 100}
             onChange={handleTimelineChange}
             className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer timeline-slider"
-            disabled={!isReady}
+            disabled={!isReady || mode === 'fork'}
           />
         </div>
       </div>
 
+      {/* Fork mode banner */}
+      {mode === 'fork' && (
+        <div className="flex items-center justify-between px-4 py-2 bg-green-900/30 border-b border-green-700/50">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-sm text-green-300">
+              Editing &bull; Fork at{' '}
+              {formatTime(
+                forks.find((f) => f.id === activeForkId)?.timestamp ?? 0
+              )}
+            </span>
+          </div>
+          <button
+            onClick={handleReturnToPlayback}
+            className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm transition-colors"
+          >
+            Return to Playback
+          </button>
+        </div>
+      )}
+
       {/* Editor */}
       <div className="flex-1 relative">
         {isReady ? (
-          <Editor
-            height="100%"
-            language={session.language}
-            value={editorContent}
-            onMount={handleEditorMount}
-            theme="vs-dark"
-            options={{
-              readOnly: true,
-              minimap: { enabled: true },
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              fontSize: 14,
-              lineNumbers: 'on',
-              cursorStyle: 'line',
-              selectionHighlight: true,
-              occurrencesHighlight: 'singleFile',
-            }}
-          />
+          <div
+            className={
+              mode === 'fork' ? 'h-full border-l-2 border-green-500' : 'h-full'
+            }
+          >
+            <Editor
+              height="100%"
+              language={session.language}
+              value={editorContent}
+              onMount={handleEditorMount}
+              theme="vs-dark"
+              options={{
+                readOnly: mode !== 'fork',
+                minimap: { enabled: true },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                fontSize: 14,
+                lineNumbers: 'on',
+                cursorStyle: 'line',
+                selectionHighlight: true,
+                occurrencesHighlight: 'singleFile',
+              }}
+            />
+          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
