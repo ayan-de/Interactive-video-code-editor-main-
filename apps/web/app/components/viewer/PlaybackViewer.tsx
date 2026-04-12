@@ -74,12 +74,17 @@ export default function PlaybackViewer({
     const currentSession = sessionRef.current;
 
     switch (data.type) {
-      case 'reset':
+      case 'reset': {
+        const model = editor.getModel();
+        if (model) {
+          model.setValue(data.content);
+        }
         setEditorContent(data.content);
         if (data.language && currentSession) {
           monaco.editor.setModelLanguage(editor.getModel()!, data.language);
         }
         break;
+      }
 
       case 'contentChange': {
         const contentEvent = data.event as ContentChangeEvent;
