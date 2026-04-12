@@ -503,18 +503,38 @@ export default function PlaybackViewer({
           </div>
         </div>
 
-        {/* Timeline scrubber */}
+        {/* Timeline scrubber with fork markers */}
         <div className="flex items-center gap-2">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="0.1"
-            value={position.progress * 100}
-            onChange={handleTimelineChange}
-            className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer timeline-slider"
-            disabled={!isReady || mode === 'fork'}
-          />
+          <div className="flex-1 relative">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="0.1"
+              value={position.progress * 100}
+              onChange={handleTimelineChange}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer timeline-slider"
+              disabled={!isReady || mode === 'fork'}
+            />
+            {position.totalTime > 0 &&
+              forks.map((fork) => {
+                const leftPercent = (fork.timestamp / position.totalTime) * 100;
+                return (
+                  <button
+                    key={fork.id}
+                    onClick={() => handleOpenFork(fork)}
+                    disabled={mode === 'fork'}
+                    className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border border-gray-900 transition-transform hover:scale-150 ${
+                      mode === 'fork'
+                        ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                        : 'bg-red-500 hover:bg-red-400 cursor-pointer'
+                    }`}
+                    style={{ left: `${leftPercent}%` }}
+                    title={`Fork at ${formatTime(fork.timestamp)}`}
+                  />
+                );
+              })}
+          </div>
         </div>
       </div>
 

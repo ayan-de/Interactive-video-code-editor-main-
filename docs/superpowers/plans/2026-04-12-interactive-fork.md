@@ -564,7 +564,7 @@ Expected: PASS
 
 - Modify: `apps/web/app/components/viewer/PlaybackViewer.tsx`
 
-- [ ] **Step 1: Add timeline fork markers**
+- [x] **Step 1: Add timeline fork markers**
 
 Replace the timeline scrubber section (the `<div className="flex items-center gap-2">` containing the `<input type="range">`) with this:
 
@@ -606,21 +606,12 @@ Replace the timeline scrubber section (the `<div className="flex items-center ga
 </div>;
 ```
 
-- [ ] **Step 2: Verify compilation**
+- [x] **Step 2: Verify compilation**
 
 Run: `pnpm exec turbo check-types --filter=web`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
-
-```bash
-git add apps/web/app/components/viewer/PlaybackViewer.tsx
-git commit -m "feat(fork): add red dot fork markers on timeline scrubber"
-```
-
----
-
-### Task 6: Fork List Dropdown
+- [x] **Step 3: Commit**
 
 **Files:**
 
