@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { Inter, Source_Serif_4, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { LoadingProvider } from './context/LoadingContext';
-import { UserProvider } from './context/UserContext';
+import { AuthProvider } from './context/AuthProvider';
 
 const fontSans = Inter({
   subsets: ['latin'],
@@ -37,7 +37,7 @@ export default function RootLayout({
         className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}
       >
         <LoadingProvider>
-          <UserProvider>{children}</UserProvider>
+          <AuthProvider>{children}</AuthProvider>
         </LoadingProvider>
       </body>
     </html>

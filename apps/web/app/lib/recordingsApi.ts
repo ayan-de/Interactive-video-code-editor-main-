@@ -56,16 +56,13 @@ interface ApiEventsResponse {
   };
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
-
 export async function fetchRecordings(
   page = 1,
   limit = 20,
   skipRedirectOn401 = false
 ): Promise<RecordingsListResponse> {
   const res = await get<ApiListResponse>(
-    `/recordings?page=${page}&limit=${limit}`,
+    `/api/recordings?page=${page}&limit=${limit}`,
     { skipRedirectOn401 }
   );
   return res.data;
@@ -76,20 +73,20 @@ export async function fetchPublicRecordings(
   limit = 20
 ): Promise<RecordingsListResponse> {
   const res = await get<ApiListResponse>(
-    `/recordings/public?page=${page}&limit=${limit}`
+    `/api/recordings/public?page=${page}&limit=${limit}`
   );
   return res.data;
 }
 
 export async function fetchRecording(id: string): Promise<RecordingFromApi> {
-  const res = await get<ApiSingleResponse>(`/recordings/${id}`);
+  const res = await get<ApiSingleResponse>(`/api/recordings/${id}`);
   return res.data;
 }
 
 export async function fetchRecordingEvents(
   id: string
 ): Promise<RecordingEventPayload[]> {
-  const res = await get<ApiEventsResponse>(`/recordings/${id}/events/all`);
+  const res = await get<ApiEventsResponse>(`/api/recordings/${id}/events/all`);
   return res.data.events;
 }
 
@@ -110,7 +107,7 @@ export async function createRecording(data: {
   tags?: string[];
   events: RecordingEventPayload[];
 }): Promise<RecordingFromApi> {
-  const res = await post<ApiSingleResponse>('/recordings', data);
+  const res = await post<ApiSingleResponse>('/api/recordings', data);
   return res.data;
 }
 
@@ -123,12 +120,12 @@ export async function updateRecording(
     isPublic?: boolean;
   }
 ): Promise<RecordingFromApi> {
-  const res = await patch<ApiSingleResponse>(`/recordings/${id}`, data);
+  const res = await patch<ApiSingleResponse>(`/api/recordings/${id}`, data);
   return res.data;
 }
 
 export async function deleteRecording(id: string): Promise<void> {
-  await del(`/recordings/${id}`);
+  await del(`/api/recordings/${id}`);
 }
 
 export async function uploadTantricaFile(
@@ -137,7 +134,7 @@ export async function uploadTantricaFile(
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/recordings/upload`, {
+  const response = await fetch('/api/recordings/upload', {
     method: 'POST',
     credentials: 'include',
     body: formData,
@@ -155,14 +152,14 @@ export async function uploadTantricaFile(
 }
 
 export async function incrementPlayCount(id: string): Promise<void> {
-  await post(`/recordings/${id}/play`);
+  await post(`/api/recordings/${id}/play`);
 }
 
 export async function downloadRecording(
   id: string,
   filename: string
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/recordings/${id}/download`, {
+  const response = await fetch(`/api/recordings/${id}/download`, {
     credentials: 'include',
   });
 

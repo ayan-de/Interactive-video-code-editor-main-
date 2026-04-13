@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaCircle, FaPlay } from 'react-icons/fa';
+import { FaCircle, FaPlay, FaHome } from 'react-icons/fa';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useRecordingCount } from '@/hooks/useRecordingCount';
@@ -29,9 +29,9 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="text-primary hover:text-primary/80 font-medium flex items-center gap-2"
+            className="text-primary hover:text-primary/80 font-large flex items-center gap-2 ml-5"
           >
-            Back to Home
+            <FaHome />
           </Link>
 
           <div className="flex items-center gap-1 bg-card rounded-lg p-1 shadow-sm border border-border">

@@ -1,44 +1,39 @@
 'use client';
 
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { useCallback } from 'react';
-import { useUser } from '../context/UserContext';
-import { get, post } from '../lib/api';
-import type { GoogleAuthUrl, AuthResponse } from '../types/auth';
+import type { User } from '../types/auth';
 
 export function useAuth() {
-  const { user, isLoading, login, logout: contextLogout } = useUser();
+  const { data: session, status } = useSession();
+  const isLoading = status === 'loading';
+  const isAuthenticated = status === 'authenticated';
+
+  const user: User | null = session?.user
+    ? {
+        _id: session.user._id,
+        email: session.user.email,
+        firstName: session.user.firstName,
+        lastName: session.user.lastName,
+        picture: session.user.picture,
+        provider: session.user.provider as 'google',
+        providerId: session.user.providerId,
+      }
+    : null;
 
   const initiateGoogleLogin = useCallback(async () => {
-    const response = await get<GoogleAuthUrl>('/auth/google');
-    if (response.data?.authUrl) {
-      window.location.href = response.data.authUrl;
-    }
+    await signIn('google', { callbackUrl: '/auth/callback' });
   }, []);
 
-  const fetchProfile = useCallback(async () => {
-    const response = await get<AuthResponse>('/auth/profile');
-    if (response.data?.user) {
-      login(response.data.user);
-      return response.data.user;
-    }
-    return null;
-  }, [login]);
-
   const logout = useCallback(async () => {
-    try {
-      await post('/auth/logout');
-    } catch {
-      // still clear locally even if server call fails
-    }
-    contextLogout();
-  }, [contextLogout]);
+    await signOut({ callbackUrl: '/' });
+  }, []);
 
   return {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     initiateGoogleLogin,
-    fetchProfile,
     logout,
   };
 }

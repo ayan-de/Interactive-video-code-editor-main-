@@ -1,0 +1,68 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
+import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
+import { connectToDatabase } from './mongodb';
+import UserModel from './models/User';
+
+const nextAuthResult = NextAuth({
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+  secret: process.env.AUTH_SECRET,
+  callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider === 'google' && profile?.sub) {
+        await connectToDatabase();
+        const providerId = profile.sub;
+        const existingUser = await UserModel.findOne({ providerId });
+        if (!existingUser) {
+          await UserModel.create({
+            email: profile.email ?? '',
+            firstName: profile.given_name ?? '',
+            lastName: profile.family_name ?? '',
+            picture: profile.picture,
+            provider: 'google',
+            providerId,
+          });
+        }
+      }
+      return true;
+    },
+    async jwt({ token, account, profile }) {
+      if (account?.provider === 'google' && profile?.sub) {
+        await connectToDatabase();
+        const user = await UserModel.findOne({ providerId: profile.sub });
+        if (user) {
+          token._id = user._id.toString();
+          token.firstName = user.firstName;
+          token.lastName = user.lastName;
+          token.picture = user.picture ?? undefined;
+          token.provider = user.provider;
+          token.providerId = user.providerId;
+        }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user._id = token._id ?? '';
+        session.user.firstName = token.firstName ?? '';
+        session.user.lastName = token.lastName ?? '';
+        session.user.picture = token.picture;
+        session.user.provider = token.provider ?? '';
+        session.user.providerId = token.providerId ?? '';
+      }
+      return session;
+    },
+  },
+});
+
+export const { handlers, signOut, auth } = nextAuthResult;
+export type SignInResult = void | never;
+export const signIn: (
+  provider: string,
+  options?: Record<string, unknown>
+) => Promise<SignInResult> = nextAuthResult.signIn as never;

@@ -1,8 +1,5 @@
 import { USER_STORAGE_KEY } from '@/lib/constants';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
-
 interface RequestOptions extends RequestInit {
   skipRedirectOn401?: boolean;
 }
@@ -12,7 +9,7 @@ async function request<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const { skipRedirectOn401, ...fetchOptions } = options;
-  const response = await fetch(`${API_BASE_URL}${url}`, {
+  const response = await fetch(url, {
     ...fetchOptions,
     credentials: 'include',
     headers: {

@@ -2,58 +2,42 @@
 
 import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useUser } from '../../context/UserContext';
+import { useSession } from 'next-auth/react';
 import { useLoading } from '../../context/LoadingContext';
-import { get } from '../../lib/api';
-import type { AuthResponse } from '../../types/auth';
 
 function CallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { login } = useUser();
+  const { data: session, status } = useSession();
   const { showSuccess, showError } = useLoading();
 
   const errorParam = searchParams.get('error');
-  const successParam = searchParams.get('success');
 
   useEffect(() => {
-    const processCallback = async () => {
-      if (errorParam) {
-        const errorMessage =
-          errorParam === 'missing_code'
-            ? 'No authorization code received'
-            : decodeURIComponent(errorParam);
-        showError(errorMessage);
-        setTimeout(() => router.push('/'), 3000);
-        return;
-      }
+    if (status === 'loading') return;
 
-      if (successParam) {
-        try {
-          const data = await get<AuthResponse>('/auth/profile');
+    if (errorParam) {
+      const errorMessage =
+        errorParam === 'missing_code'
+          ? 'No authorization code received'
+          : decodeURIComponent(errorParam);
+      showError(errorMessage);
+      setTimeout(() => router.push('/'), 3000);
+      return;
+    }
 
-          if (!data.data?.user) {
-            throw new Error('Failed to fetch user profile');
-          }
+    if (session?.user) {
+      showSuccess('You have been signed in successfully!');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1500);
+      return;
+    }
 
-          login(data.data.user);
-          showSuccess('You have been signed in successfully!');
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 1500);
-        } catch (err: unknown) {
-          console.error('Failed to fetch user profile:', err);
-          showError('Failed to process authentication data');
-          setTimeout(() => router.push('/'), 3000);
-        }
-        return;
-      }
-
+    if (status === 'unauthenticated') {
       router.push('/');
-    };
-
-    processCallback();
-  }, [errorParam, successParam, login, showError, showSuccess, router]);
+    }
+  }, [session, status, errorParam, showError, showSuccess, router]);
 
   return null;
 }
